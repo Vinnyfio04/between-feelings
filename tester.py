@@ -12,9 +12,9 @@ CONTROLLER_DIR = Path(__file__).resolve().parent / "controller"
 if str(CONTROLLER_DIR) not in sys.path:
     sys.path.insert(0, str(CONTROLLER_DIR))
 
-from controller import authentication as auth
-from controller import controller as c
-from controller import db_logging
+import authentication as auth
+import controller as c
+import db_logging
 
 
 class TestAuthentication(unittest.TestCase):
