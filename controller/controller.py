@@ -16,11 +16,11 @@ def delete_log(user_id, log_id):
     return db_log.delete_log(user_id, log_id)
 
 # Authentication
-def user_exists(username, demo):
-    return auth.user_exists(username, demo)
+def user_exists(username):
+    return auth.user_exists(username)
 
-def verify_password(username, demo):
-    return auth.verify_password(username, demo)
+def verify_password(username, password):
+    return auth.verify_password(username, password)
 
 def create_user(username, password):
     return auth.create_user(username, password)

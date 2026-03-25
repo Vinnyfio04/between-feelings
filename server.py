@@ -14,6 +14,7 @@ if str(CONTROLLER_DIR) not in sys.path: # If the controller directory is not in 
 import controller  # noqa: E402 # Import the controller module in order to gain access to get_logs function
 
 
+
 app = Flask(__name__)
 CORS(app) # Enable CORS for the app, prevent browser from blocking requests from different origins
 
@@ -30,6 +31,16 @@ def delete_user_log(user_id: int, log_id: int):
     if not deleted:
         return jsonify({"deleted": False}), 404
     return jsonify({"deleted": True})
+
+@app.get("/authentication/user_exists/<string:username>")
+def user_exists(username: str):
+    exists = controller.user_exists(username)
+    return jsonify({"exists": exists})
+
+@app.get("/authentication/verify_password/<string:username>/<string:password>")
+def verify_password(username: str, password: str):
+    verified = controller.verify_password(username, password)
+    return jsonify({"verified": verified})
 
 
 if __name__ == "__main__":
