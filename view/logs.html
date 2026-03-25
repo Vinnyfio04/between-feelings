@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Emotion Log</title>
+  <link rel="stylesheet" href="log_style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+</head>
+<body>
+
+  <div class="app-shell">
+
+    <!-- header -->
+    <header class="top-bar">
+      <button class="icon-btn" id="menuBtn" aria-label="Open menu">
+        <span class="hamburger"></span>
+      </button>
+      <h1 class="app-title">My Log</h1>
+      <div class="header-spacer"></div>
+    </header>
+
+    <!-- hamburger menu -->
+    <nav class="drawer" id="drawer" aria-hidden="true">
+      <ul>
+        <li><a href="#">Home</a></li>
+        <li><a href="#" class="active">Log</a></li>
+        <li><a href="#">Patterns</a></li>
+        <li><a href="#">LLM Chat</a></li>
+        <li><a href="#">Settings</a></li>
+      </ul>
+    </nav>
+    <div class="drawer-backdrop" id="drawerBackdrop"></div>
+
+    <!-- Search + Filter Bar -->
+    <section class="search-bar-wrap">
+      <div class="search-bar">
+        <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="11" cy="11" r="8"></circle>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+
+        <input type="text" id="searchInput" placeholder="Search entries..." autocomplete="off" />
+
+        <button class="icon-btn filter-btn" id="filterBtn" aria-label="Filter by intensity">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
+          </svg>
+        </button>
+
+        <button class="icon-btn sort-btn" id="sortBtn" aria-label="Sort entries">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="3" y1="6" x2="21" y2="6"></line>
+            <line x1="6" y1="12" x2="18" y2="12"></line>
+            <line x1="9" y1="18" x2="15" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+
+      <!-- filter dropdown -->
+      <div class="filter-dropdown hidden" id="filterDropdown">
+        <span class="filter-label">Filter by Intensity</span>
+        <div class="filter-chips">
+          <button class="chip active" data-intensity="all">All</button>
+          <button class="chip" data-intensity="low">Low</button>
+          <button class="chip" data-intensity="medium">Medium</button>
+          <button class="chip" data-intensity="high">High</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- log list -->
+    <main class="log-list" id="logList"></main>
+
+    <footer class="bottom-bar">
+      <button class="nav-dot active" data-page="0" aria-label="Page 1"></button>
+      <button class="nav-dot" data-page="1" aria-label="Page 2"></button>
+      <button class="nav-dot" data-page="2" aria-label="Page 3"></button>
+    </footer>
+
+  </div>
+
+  <script>
+    const menuBtn = document.getElementById("menuBtn");
+    const drawer = document.getElementById("drawer");
+    const drawerBackdrop = document.getElementById("drawerBackdrop");
+
+    const filterBtn = document.getElementById("filterBtn");
+    const filterDropdown = document.getElementById("filterDropdown");
+
+    const searchInput = document.getElementById("searchInput");
+    const sortBtn = document.getElementById("sortBtn");
+    const logList = document.getElementById("logList");
+
+    const chips = document.querySelectorAll(".chip");
+
+    let currentFilter = "all";
+    let sortDescending = true;
+
+    const apiBaseUrl = "http://127.0.0.1:5000"; // Base URL for the API (local for now)
+    const currentUserId = 3; // Temporary hardcoded user id (keep in sync with load / delete)
+
+    function getIntensityLevel(intensity) { // Takes in the intensity of the log and returns the intensity level as a string
+      const value = Number(intensity);
+      if (value <= 3) return "low";
+      if (value <= 6) return "medium";
+      return "high";
+    }
+
+    function formatLogDate(rawDate) { // Takes in the raw date of the log and returns the date as a string
+      const parsedDate = new Date(rawDate);
+      if (Number.isNaN(parsedDate.getTime())) {
+        return rawDate || "";
+      }
+      return parsedDate.toLocaleDateString("en-US", { month: "short", day: "numeric" }); // Format the date as month, day
+    }
+
+    function createLogCard(log) { // Creates a log card <html> element for the given log
+      const intensityLevel = getIntensityLevel(log.intensity);
+      const card = document.createElement("article");
+      card.className = "log-card";
+      card.dataset.intensity = intensityLevel;
+      card.dataset.logId = String(log.log_id);
+
+      card.innerHTML = `
+        <div class="card-top">
+          <div class="card-label-row">
+            <span class="emotion-dot ${intensityLevel}"></span>
+            <h2 class="emotion-label">${log.label}</h2>
+            <span class="card-date">${formatLogDate(log.log_date)}</span>
+            <div class="card-menu-wrap">
+              <button type="button" class="card-menu-btn" aria-label="More options" aria-haspopup="true" aria-expanded="false">···</button>
+              <div class="card-menu-popup hidden" role="menu" aria-hidden="true">
+                <button type="button" class="card-menu-delete-btn" data-log-id="${log.log_id}">Delete</button>
+              </div>
+            </div>
+          </div>
+          <p class="card-description">${log.situation_description || ""}</p>
+        </div>
+        <div class="card-actions">
+          <button class="btn btn-outline" data-id="${log.log_id}" onclick="viewEntry(this)">View</button>
+          <button class="btn btn-filled" data-id="${log.log_id}" onclick="editEntry(this)">Edit</button>
+        </div>
+      `;
+
+      return card;
+    }
+
+    function closeAllCardMenus() {
+      document.querySelectorAll(".card-menu-popup").forEach((popup) => {
+        popup.classList.add("hidden");
+        popup.setAttribute("aria-hidden", "true");
+      });
+      document.querySelectorAll(".card-menu-btn").forEach((btn) => {
+        btn.setAttribute("aria-expanded", "false");
+      });
+      document.querySelectorAll(".log-card.card-menu-open").forEach((card) => {
+        card.classList.remove("card-menu-open");
+      });
+    }
+
+    async function deleteLogCard(logId, card) {
+      closeAllCardMenus();
+      if (card) {
+        card.remove();
+        applyFilters();
+      }
+      try {
+        const response = await fetch(`${apiBaseUrl}/logs/${currentUserId}/${logId}`, {
+          method: "DELETE",
+        });
+        if (!response.ok) {
+          throw new Error("Could not delete log.");
+        }
+      } catch (error) {
+        await loadLogs();
+      }
+    }
+
+    async function loadLogs() {
+      try {
+        const response = await fetch(`${apiBaseUrl}/logs/${currentUserId}`); // Fetch the logs from the API
+        if (!response.ok) { // throw an error if the response is not ok (null)
+          throw new Error("Could not load logs.");
+        }
+
+        const logs = await response.json(); // Parse the response as JSON
+        logList.innerHTML = "";
+
+        logs.forEach(log => { // For every log in response, create a log card and append it to the log list
+          logList.appendChild(createLogCard(log)); 
+        });
+
+        applyFilters();
+      } catch (error) {
+        logList.innerHTML = `<p class="card-description">Unable to load logs right now.</p>`; // If an error occurs, display a message in the log list
+      }
+    }
+
+    function getCards() {
+      return document.querySelectorAll(".log-card");
+    }
+
+    function getCardText(card) {
+      const title = card.querySelector(".emotion-label")?.innerText || "";
+      const description = card.querySelector(".card-description")?.innerText || "";
+      const date = card.querySelector(".card-date")?.innerText || "";
+      return (title + " " + description + " " + date).toLowerCase();
+    }
+
+    function applyFilters() { 
+      const keyword = searchInput.value.trim().toLowerCase();
+      const cards = getCards();
+
+      cards.forEach(card => {
+        const intensity = card.dataset.intensity;
+        const matchesFilter = currentFilter === "all" || intensity === currentFilter;
+        const matchesSearch = getCardText(card).includes(keyword);
+
+        if (matchesFilter && matchesSearch) {
+          card.classList.remove("hidden-card");
+        } else {
+          card.classList.add("hidden-card");
+        }
+      });
+    }
+
+    function getDateValue(dateText) {
+      return new Date(dateText + ", 2026").getTime();
+    }
+
+    function sortCards() {
+      const cards = Array.from(getCards());
+
+      cards.sort((a, b) => {
+        const dateA = a.querySelector(".card-date")?.innerText || "";
+        const dateB = b.querySelector(".card-date")?.innerText || "";
+        return sortDescending
+          ? getDateValue(dateB) - getDateValue(dateA)
+          : getDateValue(dateA) - getDateValue(dateB);
+      });
+
+      cards.forEach(card => logList.appendChild(card));
+      applyFilters();
+    }
+
+    menuBtn.addEventListener("click", () => {
+      drawer.classList.add("open");
+      drawerBackdrop.classList.add("visible");
+      drawer.setAttribute("aria-hidden", "false");
+    });
+
+    drawerBackdrop.addEventListener("click", () => {
+      drawer.classList.remove("open");
+      drawerBackdrop.classList.remove("visible");
+      drawer.setAttribute("aria-hidden", "true");
+    });
+
+    filterBtn.addEventListener("click", () => {
+      filterDropdown.classList.toggle("hidden");
+      filterBtn.classList.toggle("active");
+    });
+
+    chips.forEach(chip => {
+      chip.addEventListener("click", () => {
+        chips.forEach(c => c.classList.remove("active"));
+        chip.classList.add("active");
+        currentFilter = chip.dataset.intensity;
+        applyFilters();
+      });
+    });
+
+    searchInput.addEventListener("input", () => {
+      applyFilters();
+    });
+
+    sortBtn.addEventListener("click", () => {
+      sortDescending = !sortDescending;
+      sortCards();
+    });
+
+    // Card menu event listener
+    logList.addEventListener("click", (e) => {
+      const menuBtn = e.target.closest(".card-menu-btn");
+      if (menuBtn) { // If the clicked element is a card menu button, open the card menu popup
+        e.stopPropagation();
+        const wrap = menuBtn.closest(".card-menu-wrap");
+        const popup = wrap.querySelector(".card-menu-popup");
+        const card = menuBtn.closest(".log-card");
+        const willOpen = popup.classList.contains("hidden");
+
+        closeAllCardMenus();
+
+        if (willOpen) { // If the card menu popup is hidden, remove the hidden class and set the aria-hidden attribute to false. This will show the card menu popup.
+          popup.classList.remove("hidden");
+          popup.setAttribute("aria-hidden", "false");
+          menuBtn.setAttribute("aria-expanded", "true");
+          if (card) card.classList.add("card-menu-open");
+        }
+        return;
+      }
+
+      const deleteBtn = e.target.closest(".card-menu-delete-btn");
+      if (deleteBtn) { // If the clicked element is a card menu delete button, delete the log
+        e.stopPropagation(); // Stop the event from bubbling up to the parent elements
+        const logId = deleteBtn.dataset.logId;
+        const card = deleteBtn.closest(".log-card");
+        deleteLogCard(logId, card);
+      }
+    });
+
+    document.addEventListener("click", () => {
+      closeAllCardMenus();
+    });
+
+    function viewEntry(button) {
+      const id = button.dataset.id;
+      alert("View entry " + id);
+    }
+
+    function editEntry(button) {
+      const id = button.dataset.id;
+      alert("Edit entry " + id);
+    }
+
+    window.addEventListener("load", loadLogs);
+  </script>
+
+</body>
+</html>

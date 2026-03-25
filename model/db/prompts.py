@@ -1,0 +1,3 @@
+SYSTEM_PROMPT = """
+You are a structured emotional pattern recognition system...
+"""
