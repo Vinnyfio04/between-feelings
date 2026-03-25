@@ -34,11 +34,6 @@ def user_exists(username):
     return exists
 
 def verify_password(username, password):
-    # user_exists() is a method that takes a string input and will be called when the password submit button in authentication.html is pressed.
-    # It assigns a password variable to the output from getPasswordInput().
-    # Username is used in SQL code to retrieve the password associated with the username and assigns it to correctPassword variable
-    # return if password === correctPassword (true if password matches, False if not)
-    # DEMO is a placeholder for the password in the SQL database
 
     conn = get_connection()
     cur = conn.cursor()
