@@ -43,6 +43,7 @@ The purpose of Between Feelings is to help people recognize and regulate their e
    - For example:
      - `view/authentication.html` (login -> calls `/authentication/verify_password/...`)
      - `view/logs.html` (renders logs by calling `/logs/<user_id>` and deletes via `DELETE /logs/<user_id>/<log_id>`)
+     
 ## Tech Stack
 - Neon (PostgreSQL hosted)
   - Neon is used for the database because it supports efficient PostgreSQL usage and works cleanly with API backends via a single connection string.

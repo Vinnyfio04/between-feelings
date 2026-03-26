@@ -108,3 +108,9 @@ Output format:
 
 Here is the user emotion log:  
 """
+
+CHAT_PROMPT = """
+Your job is to respond to the user's message.
+
+Here is the user's message:
+"""

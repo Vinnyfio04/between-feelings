@@ -1,20 +1,60 @@
-#url variable is used to send the requests to the llm
-llm = "llm_url"
+import os
+from dotenv import load_dotenv
+from google import genai
 
-#db variable is used to send requests to and from the database, specified for the user
-db = "db_url"
+load_dotenv()
 
-#prompt variable is used to send prompt text to the llm
-prompt = "text"
+MODEL_NAME = "gemini-2.5-flash"
+_client = None
 
-#attempts ping the llm, returns boolean on success/fail
-def llm_connect(llm):
-	return True
 
-#connects the llm and the db entries for the user, returns boolean on success/fail
-def db_llm_connect(db, llm):
-	return True
+def has_api_key() -> bool:
+    load_dotenv(override=True)
+    return bool(os.environ.get("GOOGLE_GENERATIVE_AI_API_KEY"))
 
-#takes prompt for llm, sends to llm, returns string
-def generate_text(prompt):
-	return "response"
+
+def get_client():
+    global _client
+
+    if _client is not None:
+        return _client
+
+    load_dotenv(override=True)
+    api_key = os.environ.get("GOOGLE_GENERATIVE_AI_API_KEY")
+
+    if not api_key:
+        raise ValueError("GOOGLE_GENERATIVE_AI_API_KEY is missing.")
+
+    _client = genai.Client(api_key=api_key)
+    return _client
+
+
+def llm_connect() -> bool:
+    try:
+        client = get_client()
+        # Minimal connectivity test
+        response = client.models.generate_content(
+            model=MODEL_NAME,
+            contents="Reply with the word OK."
+        )
+        return bool(response.text)
+    except Exception:
+        return False
+
+
+def generate_text(prompt: str) -> str:
+    if not prompt or not prompt.strip():
+        raise ValueError("Prompt cannot be empty.")
+
+    client = get_client()
+
+    response = client.models.generate_content(
+        model=MODEL_NAME,
+        contents=prompt
+    )
+
+    text = getattr(response, "text", None)
+    if not text:
+        raise ValueError("LLM returned an empty response.")
+
+    return text.strip()
