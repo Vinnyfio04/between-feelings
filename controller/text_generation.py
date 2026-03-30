@@ -7,7 +7,7 @@ from model.db.prompts import (
     PATTERN_GENERATION_PROMPT,
     CLARIFYING_QUESTIONS_PROMPT,
 )
-from model.emotion_log import EmotionLog
+from emotion_log import EmotionLog
 
 
 def _clean_text(value: Optional[str]) -> str:

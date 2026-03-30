@@ -22,28 +22,19 @@ The purpose of Between Feelings is to help people recognize and regulate their e
 2. Install Python dependencies
    - Install the dependencies from `requirements.txt`:
 
-     python3 -m pip install --user -r requirements.txt
+     python -m pip install --user -r requirements.txt
 
-3. Configure environment variables for Neon (PostgreSQL)
-   - Create a file named `.env` in the project root.
-   - Add your Neon connection string:
-
-     DATABASE_URL="postgresql://<user>:<password>@<host>:5432/<db>?sslmode=require"
-
-4. Run the backend (Flask API)
+3. Run the backend (Flask API)
    - Start the server from the project root:
-   - (No compilation step; Python is interpreted.)
-
      python server.py
 
-   - The API runs at `http://127.0.0.1:5000`.
-
 5. Run the frontend (static HTML)
-   - Open the HTML pages in `view/` in your browser (no separate build step exists in this repo).
+   - Open the following HTML pages in `view/` in your browser
    - For example:
      - `view/authentication.html` (login -> calls `/authentication/verify_password/...`)
      - `view/logs.html` (renders logs by calling `/logs/<user_id>` and deletes via `DELETE /logs/<user_id>/<log_id>`)
-     
+          - NOTE: Test logs can be used to verify deletion. You can search "test" in the search bar to retrieve them.
+
 ## Tech Stack
 - Neon (PostgreSQL hosted)
   - Neon is used for the database because it supports efficient PostgreSQL usage and works cleanly with API backends via a single connection string.
