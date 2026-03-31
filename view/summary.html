@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Your Patterns</title>
+  <link rel="stylesheet" href="style.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+</head>
+<body>
+
+<div class="app-shell">
+
+  <!-- Header -->
+  <header class="top-bar">
+    <button class="icon-btn" id="menuBtn" type="button" aria-label="Open menu">
+      <span class="hamburger"></span>
+    </button>
+    <h1 class="app-title">Your Patterns</h1>
+    <div class="header-spacer"></div>
+  </header>
+
+  <!-- Drawer -->
+  <nav class="drawer" id="drawer">
+    <ul>
+      <li><a href="#">Home</a></li>
+      <li><a href="#">Log</a></li>
+      <li><a href="#" class="active">Patterns</a></li>
+      <li><a href="#">LLM Chat</a></li>
+    </ul>
+  </nav>
+  <div class="drawer-backdrop" id="drawerBackdrop"></div>
+
+  <!-- Main -->
+  <main class="patterns-page">
+
+    <section class="hero-card">
+      <p class="section-label">WEEKLY REFLECTION</p>
+      <h2>Your emotional patterns</h2>
+      <p>
+        Over the past week, you most often logged feelings of anxiety,
+        tiredness, and moments of calm.
+      </p>
+    </section>
+
+    <section class="summary-card">
+      <div class="summary-header">
+        <h3>Short Summary</h3>
+        <span class="badge">
+          <img src="logo.svg" class="badge-icon" alt="AI insight icon">
+        </span>
+      </div>
+
+      <div class="summary-box">
+        You experience stress most often during high-pressure situations,
+        especially when work builds up. Rest and quiet time help you recover.
+      </div>
+    </section>
+
+    <section class="insight-card">
+      <h3>Quick Insights</h3>
+
+      <div class="insight"><span></span> Stress appears before meetings</div>
+      <div class="insight"><span></span> Low energy after long days</div>
+      <div class="insight"><span></span> Calm linked to rest</div>
+    </section>
+
+    <section class="dropdown-card">
+      <button id="toggleBtn" class="dropdown-btn" type="button">
+        View Detailed Summary ▼
+      </button>
+
+      <div id="dropdownContent" class="dropdown-content">
+        <p>
+          Your logs show repeated stress before responsibilities.
+          You are aware of your emotions, and recovery often comes
+          from stepping away and resting.
+        </p>
+      </div>
+    </section>
+
+  </main>
+
+</div>
+
+<script>
+const menuBtn = document.getElementById("menuBtn");
+const drawer = document.getElementById("drawer");
+const backdrop = document.getElementById("drawerBackdrop");
+
+menuBtn.onclick = () => {
+  drawer.classList.add("open");
+  backdrop.classList.add("show");
+};
+
+backdrop.onclick = () => {
+  drawer.classList.remove("open");
+  backdrop.classList.remove("show");
+};
+
+const toggleBtn = document.getElementById("toggleBtn");
+const content = document.getElementById("dropdownContent");
+
+toggleBtn.onclick = () => {
+  content.classList.toggle("open");
+};
+</script>
+
+</body>
+</html>
