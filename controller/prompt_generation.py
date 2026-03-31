@@ -8,43 +8,6 @@ from model.db.prompts import (
 )
 from emotion_log import EmotionLog
 
-
-def _clean_text(value: Optional[str]) -> str:
-    """
-    Returns a safe, stripped string for prompt formatting.
-    """
-    if value is None:
-        return ""
-    return str(value).strip()
-
-
-def _format_follow_up_qa(follow_up_qa: Optional[str]) -> str:
-    """
-    Formats follow-up Q/A text safely for the prompt.
-    """
-    cleaned = _clean_text(follow_up_qa)
-    return cleaned if cleaned else "None"
-
-
-def _format_log(log: EmotionLog) -> str:
-    """
-    Converts one EmotionLog DTO into a stable plain-text format for the LLM.
-    """
-    lines = [
-        f"Log ID: {log.log_id}",
-        f"User ID: {log.user_id}",
-        f"Date: {_clean_text(log.log_date)}",
-        f"Emotion Label: {_clean_text(log.label)}",
-        f"Intensity: {log.intensity}",
-        f"Description: {_clean_text(log.situation_description)}",
-        f"Trigger: {_clean_text(log.perceived_trigger)}",
-        f"Sleep Quality: {_clean_text(log.sleep_quality)}",
-        f"Follow-Up Q&A: {_format_follow_up_qa(log.follow_up_qa)}",
-    ]
-
-    return "\n".join(lines)
-
-
 def _format_logs(logs: List[EmotionLog]) -> str:
     """
     Converts a list of EmotionLog DTOs into prompt-ready text.
@@ -52,19 +15,17 @@ def _format_logs(logs: List[EmotionLog]) -> str:
     if not logs:
         return "No emotional logs were provided."
 
-    formatted_logs = []
-    for index, log in enumerate(logs, start=1):
-        formatted_logs.append(f"LOG {index}\n{_format_log(log)}")
+    formatted_logs = [] # Add titles to the list first
+    formatted_logs.append("Log ID | User ID | Label | Situation Description | Log Date | Perceived Trigger | Intensity | Sleep Quality | Follow-up Q&A ||")
 
-    return "\n\n---\n\n".join(formatted_logs)
+    for log in logs:
+        formatted_logs.append(log.__str__())
+    
+    return "\n".join(formatted_logs)
 
 
-def _build_prompt(
-    system_prompt: str,
-    task_prompt: str,
-    logs_text: str,
-    user_input: Optional[str] = None
-) -> str:
+
+def _build_prompt(system_prompt: str, task_prompt: str, logs_text: str, user_input: Optional[str] = None) -> str:
     """
     Concatenates the prompt in the required order:
     system prompt + relevant prompt + relevant log(s) + optional user input
@@ -109,5 +70,5 @@ def build_followup_questions_prompt(log: EmotionLog) -> str:
     return _build_prompt(
         system_prompt=SYSTEM_PROMPT,
         task_prompt=CLARIFYING_QUESTIONS_PROMPT,
-        logs_text=_format_log(log),
+        logs_text=log.__str__(),
     )

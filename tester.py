@@ -16,6 +16,8 @@ import authentication as auth
 import controller as c
 import db_logging
 import emotion_log
+import prompt_generation
+import text_generation
 
 
 class TestAuthentication(unittest.TestCase):
@@ -88,8 +90,27 @@ class TestDbLogging(unittest.TestCase):
     def test_emotion_log_to_string(self):
         titles = "\nLog ID | User ID | Label | Situation Description | Log Date | Perceived Trigger | Intensity | Sleep Quality | Follow-Up Q&A"
         log = emotion_log.EmotionLog(1, 1, "Anxious", "Before the meeting", "2025-01-01", "deadline", 8, "poor", "QA")
-        print(titles)
-        print(log)
+        # print(titles)
+        # print(log)
+
+    # Test prompt generation stuff
+    def test_format_logs(self):
+        logs = db_logging.get_logs(3)
+
+        formatted_logs = prompt_generation._format_logs(logs)
+
+        # print("")
+
+        i = 0
+        while i <= 3:
+            # print(formatted_logs[i])
+            i += 1
+
+    def test_build_patterns_summary_prompt(self):
+        logs = db_logging.get_logs(3)
+        prompt = prompt_generation.build_patterns_summary_prompt(logs)
+        # print(prompt)
+
 
 if __name__ == "__main__":
     unittest.main()
