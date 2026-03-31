@@ -15,6 +15,7 @@ if str(CONTROLLER_DIR) not in sys.path:
 import authentication as auth
 import controller as c
 import db_logging
+import emotion_log
 
 
 class TestAuthentication(unittest.TestCase):
@@ -83,6 +84,12 @@ class TestDbLogging(unittest.TestCase):
     # Add tests for save_log, update_log, and delete_log as they get implemented
 
 
+    # Test emotion log stuff
+    def test_emotion_log_to_string(self):
+        titles = "\nLog ID | User ID | Label | Situation Description | Log Date | Perceived Trigger | Intensity | Sleep Quality | Follow-Up Q&A"
+        log = emotion_log.EmotionLog(1, 1, "Anxious", "Before the meeting", "2025-01-01", "deadline", 8, "poor", "QA")
+        print(titles)
+        print(log)
 
 if __name__ == "__main__":
     unittest.main()
