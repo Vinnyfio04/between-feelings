@@ -1,4 +1,3 @@
-
 :root {
   /* Backgrounds */
   --bg:           #f5eee6;
@@ -475,6 +474,24 @@ body {
 .btn-filled:hover {
   background: #5c0844;
   border-color: #5c0844;
+}
+
+/* Logo in logs.html header (right side, replaces spacer) */
+.header-logo {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+  border-radius: 6px;
+  flex-shrink: 0;
+}
+
+/* Logo in authentication.html (centered brand mark above subtitle) */
+.login-logo {
+  width: 125px;
+  height: 125px;
+  object-fit: contain;
+  border-radius: 14px;
+  display: block;
 }
 
 .login-body {
