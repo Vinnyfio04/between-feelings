@@ -46,9 +46,9 @@ def get_logs(user_id: int) -> List[EmotionLog]:
             log_id=row[0],
             user_id=row[1],
             label=row[2],
-            situation_description=row[3],
-            log_date=row[4],
-            perceived_trigger=row[5],
+            description=row[3],
+            date=row[4],
+            trigger=row[5],
             intensity=row[6],
             sleep_quality=row[7],
             follow_up_qa=row[8]
@@ -64,12 +64,91 @@ def get_logs(user_id: int) -> List[EmotionLog]:
 
 
 def save_log(log: EmotionLog) -> bool:
-    # Placeholder: insert one EmotionLog into the database.
-    return True
+    conn = get_connection()
+    cur = conn.cursor()
+
+    try:
+        query = """
+        INSERT INTO emotion_logs (
+            log_id,
+            user_id,
+            label,
+            description,
+            date,
+            trigger,
+            intensity,
+            sleep_quality,
+            follow_up_qa
+        )
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+        """
+
+        cur.execute(
+            query,
+            (
+                log.log_id,
+                log.user_id,
+                log.label,
+                log.description,
+                log.date,
+                log.trigger,
+                log.intensity,
+                log.sleep_quality,
+                log.follow_up_qa,
+            ),
+        )
+        conn.commit()
+        return True
+    except Exception:
+        conn.rollback()
+        return False
+    finally:
+        cur.close()
+        conn.close()
 
 def update_log(log_id: int, updated_log: EmotionLog) -> bool:
-    # Placeholder: update one EmotionLog row by log_id.
-    return True
+    conn = get_connection()
+    cur = conn.cursor()
+
+    try:
+        query = """
+        UPDATE emotion_logs
+        SET
+            label = %s,
+            description = %s,
+            date = %s,
+            trigger = %s,
+            intensity = %s,
+            sleep_quality = %s,
+            follow_up_qa = %s
+        WHERE log_id = %s AND user_id = %s
+        """
+
+        cur.execute(
+            query,
+            (
+                updated_log.label,
+                updated_log.description,
+                updated_log.date,
+                updated_log.trigger,
+                updated_log.intensity,
+                updated_log.sleep_quality,
+                updated_log.follow_up_qa,
+                log_id,
+                updated_log.user_id,
+            ),
+        )
+        if cur.rowcount == 0:
+            conn.rollback()
+            return False
+        conn.commit()
+        return True
+    except Exception:
+        conn.rollback()
+        return False
+    finally:
+        cur.close()
+        conn.close()
 
 def delete_log(user_id: int, log_id: int) -> bool:
     conn = get_connection()

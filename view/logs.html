@@ -127,7 +127,7 @@
           <div class="card-label-row">
             <span class="emotion-dot ${intensityLevel}"></span>
             <h2 class="emotion-label">${log.label}</h2>
-            <span class="card-date">${formatLogDate(log.log_date)}</span>
+            <span class="card-date">${formatLogDate(log.date)}</span>
             <div class="card-menu-wrap">
               <button type="button" class="card-menu-btn" aria-label="More options" aria-haspopup="true" aria-expanded="false">···</button>
               <div class="card-menu-popup hidden" role="menu" aria-hidden="true">
@@ -135,7 +135,7 @@
               </div>
             </div>
           </div>
-          <p class="card-description">${log.situation_description || ""}</p>
+          <p class="card-description">${log.description || ""}</p>
         </div>
         <div class="card-actions">
           <button class="btn btn-outline" data-id="${log.log_id}" onclick="viewEntry(this)">View</button>
