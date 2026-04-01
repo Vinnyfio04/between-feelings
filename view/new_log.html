@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Edit Log</title>
-  <link rel="stylesheet" href="log_style.css"/>
+  <title>Log Creation</title>
+  <link rel="stylesheet" href="style.css"/>
   <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
 </head>
 <body>
@@ -23,9 +23,9 @@
   <!-- Drawer -->
   <nav class="drawer" id="drawer">
     <ul>
-      <li><a href="#">Home</a></li>
-      <li><a href="#" class="active">Log</a></li>
-      <li><a href="#">Patterns</a></li>
+      <li><a href="logs.html">View Logs</a></li>
+      <li><a href="new_log.html" class="active">New Log</a></li>
+      <li><a href="summary.html">Patterns</a></li>
       <li><a href="#">LLM Chat</a></li>
     </ul>
   </nav>
@@ -34,55 +34,63 @@
   <!-- Main -->
   <main class="log-page">
 
-    <section class="edit-card">
-      <p class="section-label">EDIT ENTRY</p>
-      <h2>Edit Log</h2>
+    <!-- Page 1 -->
+    <section class="log-card page active" id="page1">
+      <p class="section-label">EMOTION ENTRY</p>
+      <h2>Log Creation</h2>
 
-      <!-- meta info -->
-      <div class="edit-meta">
-        <span class="meta-pill">Log ID: #013</span>
-        <span class="meta-pill">Last updated: Today</span>
-      </div>
-
-      <!-- form -->
       <label>Talk about your experience.</label>
-      <textarea>I felt stressed after finishing multiple assignments and preparing for class.</textarea>
+      <textarea placeholder="Type here..."></textarea>
 
       <label>How would you describe how it made you feel?</label>
-      <input type="text" value="Stressed" />
+      <input type="text" placeholder="e.g. excited, angry, stressed..." />
 
       <label>What do you think caused that feeling?</label>
-      <input type="text" value="Schoolwork and deadlines" />
+      <input type="text" placeholder="e.g. schoolwork, criticism..." />
 
-      <!-- intensity -->
       <label>Intensity</label>
       <div class="slider-wrap">
-        <input type="range" min="1" max="5" value="4" />
+        <input type="range" min="1" max="5" value="3" />
         <div class="range-marks">
           <span></span><span></span><span></span><span></span><span></span>
         </div>
         <div class="range-labels numbers">
-          <span>1</span><span></span><span></span><span></span><span>5</span>
+          <span>1</span><span> </span><span> </span><span> </span><span>5</span>
         </div>
       </div>
 
-      <!-- sleep -->
       <label>Sleep Quality</label>
       <div class="slider-wrap">
         <input type="range" min="1" max="3" value="2" />
-        <div class="range-labels">
+        <div class="range-labels three-text">
           <span>Poor</span>
           <span>Average</span>
           <span>Good</span>
         </div>
       </div>
 
-      <!-- buttons -->
-      <div class="edit-actions">
-        <button class="sub-btn">Cancel</button>
-        <button class="main-btn">Save Changes</button>
+      <div class="bottom-area">
+        <button class="main-btn" id="nextBtn">Next</button>
+        <p class="step-text">1 / 3</p>
+      </div>
+    </section>
+
+    <!-- Page 2 -->
+    <section class="log-card page" id="page2">
+      <p class="section-label">FOLLOW-UP</p>
+      <h2>Let’s ask some quick follow-ups.</h2>
+
+      <div class="question-box">
+        <p class="question-title">Q1:</p>
+        <p class="question-text"></p>
       </div>
 
+      <textarea placeholder="Type your response here..."></textarea>
+
+      <div class="followup-actions">
+        <button class="sub-btn" id="backBtn">Back</button>
+        <button class="main-btn small">Next</button>
+      </div>
     </section>
 
   </main>
@@ -102,6 +110,19 @@ menuBtn.onclick = () => {
 backdrop.onclick = () => {
   drawer.classList.remove("open");
   backdrop.classList.remove("show");
+};
+
+const page1 = document.getElementById("page1");
+const page2 = document.getElementById("page2");
+
+document.getElementById("nextBtn").onclick = () => {
+  page1.classList.remove("active");
+  page2.classList.add("active");
+};
+
+document.getElementById("backBtn").onclick = () => {
+  page2.classList.remove("active");
+  page1.classList.add("active");
 };
 </script>
 
