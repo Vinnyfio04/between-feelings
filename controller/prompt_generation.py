@@ -19,7 +19,7 @@ def _format_logs(logs: List[EmotionLog]) -> str:
     formatted_logs.append("Log ID | User ID | Label | Situation Description | Log Date | Perceived Trigger | Intensity | Sleep Quality | Follow-up Q&A ||")
 
     for log in logs:
-        formatted_logs.append(str(log))
+        formatted_logs.append(log.to_prompt_row())
     
     return "\n".join(formatted_logs)
 
@@ -70,5 +70,5 @@ def build_followup_questions_prompt(log: EmotionLog) -> str:
     return _build_prompt(
         system_prompt=SYSTEM_PROMPT,
         task_prompt=CLARIFYING_QUESTIONS_PROMPT,
-        logs_text=str(log),
+        logs_text=log.to_prompt_row(),
     )

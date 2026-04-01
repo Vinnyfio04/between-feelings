@@ -44,5 +44,9 @@ class EmotionLog:
         )
 
 
-    def __str__(self):
+    def to_prompt_row(self) -> str:
+        """Serialize this log into the standardized prompt row format."""
         return f"{self.log_id} | {self.user_id} | {self.label} | {self.situation_description} | {self.log_date} | {self.perceived_trigger} | {self.intensity} | {self.sleep_quality} | {self.follow_up_qa} ||"
+
+    def __str__(self):
+        return self.to_prompt_row()
