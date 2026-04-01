@@ -1,13 +1,12 @@
-import os # system module
-import psycopg # database connector
-import emotion_log #dataclass
+import os
+from typing import List
+
+import psycopg
 from dotenv import load_dotenv
+from emotion_log import EmotionLog
 
-# get DATABASE_URL variable from the .env file
 load_dotenv()
-DATABASE_URL = os.getenv("DATABASE_URL")
 
-# Connect to the database using psycopg for future conn variables (reusing code)
 def get_connection():
     return psycopg.connect(
         os.environ["DATABASE_URL"]
@@ -15,9 +14,7 @@ def get_connection():
 
 
 
-# Take user emotion log inputs and send it to the db
-
-def get_logs(user_id):
+def get_logs(user_id: int) -> List[EmotionLog]:
     conn = get_connection() 
     cur = conn.cursor()
 
@@ -45,7 +42,7 @@ def get_logs(user_id):
         # row[7] = sleep_quality
         # row[8] = follow_up_qa
 
-        log = emotion_log.EmotionLog(
+        log = EmotionLog(
             log_id=row[0],
             user_id=row[1],
             label=row[2],
@@ -66,15 +63,15 @@ def get_logs(user_id):
     return logs
 
 
-def save_log(log):
-    # Takes an EmotionLog as a parameter. This method will take the given log and send it to the database using SQL queries and the data attached to the log. It will utilize sqlite3 to execute code to the sql database. Returns True if it succeeds, False if it fails along with what caused it to fail.
+def save_log(log: EmotionLog) -> bool:
+    # Placeholder: insert one EmotionLog into the database.
     return True
 
-def update_log(log_id, updated_log):
-    # Takes two parameters: The id for the log to update, and the EmotionLog that houses the data that will be used to update. Using SQL code, this method will update the rows and columns of the emotion log with id of log_id with the data stored in EmotionLog. Returns True if it succeeds, False if it fails along with what caused it to fail.
+def update_log(log_id: int, updated_log: EmotionLog) -> bool:
+    # Placeholder: update one EmotionLog row by log_id.
     return True
 
-def delete_log(user_id, log_id):
+def delete_log(user_id: int, log_id: int) -> bool:
     conn = get_connection()
     cur = conn.cursor()
 

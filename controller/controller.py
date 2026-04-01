@@ -1,6 +1,9 @@
+from typing import List, Optional
+
 import db_logging as db_log
 import authentication as auth
 import text_generation as tg
+from emotion_log import EmotionLog
 
 # Database logging
 def save_log(log):
@@ -26,11 +29,18 @@ def create_user(username, password):
     return auth.create_user(username, password)
 
 # Text Generation
-def generate_chat_text(prompt, logs):
-    return tg.generate_chat_text(prompt, logs)
+def generate_chat_text(
+    chat_input: str,
+    logs: Optional[List[EmotionLog]] = None,
+    user_id: Optional[int] = None,
+) -> str:
+    return tg.generate_chat_text(chat_input=chat_input, logs=logs, user_id=user_id)
 
-def generate_patterns_summary():
-    return tg.generate_patterns_summary()
+def generate_patterns_summary(
+    logs: Optional[List[EmotionLog]] = None,
+    user_id: Optional[int] = None,
+) -> str:
+    return tg.generate_patterns_summary(logs=logs, user_id=user_id)
 
-def generate_followup_questions():
-    return tg.generate_followup_questions()
+def generate_followup_questions(log: EmotionLog) -> str:
+    return tg.generate_followup_questions(log)

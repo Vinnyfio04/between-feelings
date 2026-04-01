@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from typing import Any, Dict
 
 @dataclass
 class EmotionLog:
@@ -13,8 +14,8 @@ class EmotionLog:
     sleep_quality: str
     follow_up_qa: str
 
-    def to_dict(self):
-        # Takes no parameters. Turns the EmotionLog instance into a python dictionary.
+    def to_dict(self) -> Dict[str, Any]:
+        # Convert this EmotionLog instance into a dictionary.
         return {
             "log_id": self.log_id,
             "user_id": self.user_id,
@@ -27,9 +28,20 @@ class EmotionLog:
             "follow_up_qa": self.follow_up_qa
         }
     
-    def from_dict(d):
-        # Takes no parameters. Turns the emotion log dictionary into an EmotionLog instance.
-        return EmotionLog(d.user_id, d.log_id, d.label, d.situation_description, d.log_date, d.perceived_trigger, d.intensity, d.sleep_quality, d.follow_up_qa)
+    @staticmethod
+    def from_dict(d: Dict[str, Any]) -> "EmotionLog":
+        # Build an EmotionLog from a dictionary.
+        return EmotionLog(
+            user_id=d["user_id"],
+            log_id=d["log_id"],
+            label=d["label"],
+            situation_description=d["situation_description"],
+            log_date=d["log_date"],
+            perceived_trigger=d["perceived_trigger"],
+            intensity=d["intensity"],
+            sleep_quality=d["sleep_quality"],
+            follow_up_qa=d["follow_up_qa"],
+        )
 
 
     def __str__(self):
