@@ -101,10 +101,7 @@ Constraints:
 
 Output format:
 
-- Only the questions
-- No numbering or bullets
-- One question per line
-- No extra text
+- Only the questions as a Python list of strings
 
 Here is the user emotion log:  
 """
