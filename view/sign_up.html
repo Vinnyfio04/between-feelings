@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Login – Between Feelings</title>
+  <link rel="stylesheet" href="style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+</head>
+<body>
+ 
+  <div class="app-shell">
+ 
+    <header class="top-bar">
+      <div class="header-spacer"></div>
+      <h1 class="app-title">Between Feelings</h1>
+      <div class="header-spacer"></div>
+    </header>
+ 
+    <main class="login-body">
+ 
+      <img src="logo.svg" alt="Between Feelings logo" class="login-logo" />
+
+      <p class="login-subtitle">Sign up to start your journal!</p>
+ 
+      <div class="login-form-wrap">
+ 
+        <div class="login-field">
+          <label class="login-label" for="username">Username</label>
+          <div class="search-bar login-input-bar">
+            <input
+              type="text"
+              id="username"
+              name="username"
+              placeholder="Enter your username"
+              autocomplete="username"
+              required
+            />
+          </div>
+        </div>
+ 
+        <div class="login-field">
+          <label class="login-label" for="password">Password</label>
+          <div class="search-bar login-input-bar">
+            <input
+              type="password"
+              id="password"
+              name="password"
+              placeholder="Enter your password"
+              autocomplete="current-password"
+              required
+            />
+            <button
+              type="button"
+              class="icon-btn toggle-password"
+              aria-label="Toggle password visibility"
+              onclick="togglePassword()"
+            >
+              <!-- Eye open -->
+              <svg id="eye-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                <circle cx="12" cy="12" r="3"/>
+              </svg>
+              <!-- Eye closed -->
+              <svg id="eye-off-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                style="display:none;">
+                <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/>
+                <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/>
+                <line x1="1" y1="1" x2="23" y2="23"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+ 
+        <button type="button" class="btn btn-filled login-submit" onclick="handleSignUp()">
+          Sign Up
+        </button>
+ 
+      </div>
+ 
+    </main>
+ 
+ 
+  </div>
+ 
+  <script>
+    function togglePassword() {
+      const input = document.getElementById('password');
+      const eyeIcon = document.getElementById('eye-icon');
+      const eyeOffIcon = document.getElementById('eye-off-icon');
+ 
+      if (input.type === 'password') {
+        input.type = 'text';
+        eyeIcon.style.display = 'none';
+        eyeOffIcon.style.display = 'block';
+      } else {
+        input.type = 'password';
+        eyeIcon.style.display = 'block';
+        eyeOffIcon.style.display = 'none';
+      }
+    }
+ 
+    async function handleSignUp() {
+      const username = document.getElementById('username').value;
+      const password = document.getElementById('password').value;
+ 
+      const apiBaseUrl = "http://127.0.0.1:5000";
+
+      try {
+        const response = await fetch(`${apiBaseUrl}/authentication/verify_password/${username}/${password}`);
+        if (!response.ok) throw new Error("Could not verify password.");
+        const data = await response.json();
+        if (data.verified) {
+          sessionStorage.setItem("currentUserId", data.user_id) // Set the user id in the session storage
+          window.location.href = "logs.html";
+        } else {
+          alert("Invalid username or password.");
+        }
+      } catch (err) {
+        alert("Unable to reach the server. Please try again.");
+      }
+
+    }
+  </script>
+ 
+</body>
+</html>
