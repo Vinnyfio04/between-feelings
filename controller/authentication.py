@@ -34,20 +34,26 @@ def user_exists(username):
     return exists
 
 def verify_password(username, password):
-
     conn = get_connection()
     cur = conn.cursor()
 
     query = """
-    SELECT password FROM users WHERE username = %s
+    SELECT user_id, password FROM users WHERE username = %s
     """
-    
+   
     cur.execute(query, (username,))
-    correctPassword = cur.fetchone()[0]
+    row = cur.fetchone()
 
     conn.close()
     cur.close()
-    return password == correctPassword
+
+    if row is None:
+        return None
+
+    user_id, correct_password = row
+    if password == correct_password:
+        return user_id
+    return None
 
 def create_user(username, password):
     # create_user() is a method that takes two parameters: a string username that holds the username input, and a string password that holds the password input

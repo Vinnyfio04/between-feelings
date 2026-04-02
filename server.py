@@ -39,8 +39,10 @@ def user_exists(username: str):
 
 @app.get("/authentication/verify_password/<string:username>/<string:password>")
 def verify_password(username: str, password: str):
-    verified = controller.verify_password(username, password)
-    return jsonify({"verified": verified})
+    user_id = controller.verify_password(username, password)
+    if user_id is None:
+        return jsonify({"verified": False})
+    return jsonify({"verified": True, "user_id": user_id}) # Return user ID of the user that logged in successfully
 
 
 if __name__ == "__main__":

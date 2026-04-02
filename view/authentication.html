@@ -107,12 +107,13 @@
       const password = document.getElementById('password').value;
  
       const apiBaseUrl = "http://127.0.0.1:5000";
- 
+
       try {
         const response = await fetch(`${apiBaseUrl}/authentication/verify_password/${username}/${password}`);
         if (!response.ok) throw new Error("Could not verify password.");
         const data = await response.json();
         if (data.verified) {
+          sessionStorage.setItem("currentUserId", data.user_id) // Set the user id in the session storage
           window.location.href = "logs.html";
         } else {
           alert("Invalid username or password.");
@@ -120,6 +121,7 @@
       } catch (err) {
         alert("Unable to reach the server. Please try again.");
       }
+
     }
   </script>
  

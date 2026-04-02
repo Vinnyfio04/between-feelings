@@ -92,7 +92,11 @@
     let sortDescending = true;
 
     const apiBaseUrl = "http://127.0.0.1:5000"; // Base URL for the API (local for now)
-    const currentUserId = 3; // Temporary hardcoded user id (keep in sync with load / delete)
+    const currentUserId = sessionStorage.getItem("currentUserId") // Get the user id from the session storage
+
+    if (!currentUserId) {
+      window.location.href = "authentication.html";
+    }
 
     function getIntensityLevel(intensity) { // Takes in the intensity of the log and returns the intensity level as a string
       const value = Number(intensity);
