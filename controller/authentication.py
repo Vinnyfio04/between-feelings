@@ -56,8 +56,25 @@ def verify_password(username, password):
     return None
 
 def create_user(username, password):
-    # create_user() is a method that takes two parameters: a string username that holds the username input, and a string password that holds the password input
-    # It is called in authentication.html when the username input does not exist in the db.
-    # It takes the two parameters and sends SQL code that adds the user to the authentication table in the database
-    # Returns True if it was successfully created, False if there was an error
-    return True
+    conn = get_connection()
+    cur = conn.cursor()
+
+    query = """
+    INSERT INTO users (username, password) VALUES ( %s, %s)
+    """
+    cur.execute(query, (username, password,))
+
+    conn.commit()
+
+    # Get the user id of the newly created user
+    queryID = """
+    SELECT user_id, password FROM users WHERE username = %s
+    """
+    cur.execute(queryID, (username,))
+    row = cur.fetchone()
+    user_id = row[0]
+
+    cur.close()
+    conn.close()
+
+    return user_id
