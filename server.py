@@ -47,7 +47,7 @@ def verify_password(username: str, password: str):
 @app.post("/authentication/create_user/<string:username>/<string:password>")
 def create_user(username: str, password: str):
     user_id = controller.create_user(username, password)
-    return jsonify({"user_id": user_id})
+    return jsonify({"verified": True, "user_id": user_id})
 
 if __name__ == "__main__":
     app.run(debug=True) # Run the app in debug mode, allow for automatic reloading of the server when code changes are made

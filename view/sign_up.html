@@ -109,8 +109,8 @@
       const apiBaseUrl = "http://127.0.0.1:5000";
 
       try {
-        const response = await fetch(`${apiBaseUrl}/authentication/verify_password/${username}/${password}`);
-        if (!response.ok) throw new Error("Could not verify password.");
+        const response = await fetch(`${apiBaseUrl}/authentication/create_user/${username}/${password}`, {method: "POST"}); // Sends POST request to create_user endpoint
+        if (!response.ok) throw new Error("Could not create a new user.");
         const data = await response.json();
         if (data.verified) {
           sessionStorage.setItem("currentUserId", data.user_id) // Set the user id in the session storage
