@@ -73,6 +73,24 @@
             </button>
           </div>
         </div>
+
+        <div class="login-field">
+          <label class="login-label" for="confirmPassword">Confirm Password</label>
+          <div class="search-bar login-input-bar">
+            <input
+              type="password"
+              id="confirmPassword"
+              name="confirmPassword"
+              placeholder="Re-enter your password"
+              autocomplete="new-password"
+              required
+            />
+          </div>
+
+          <p id="passwordMismatchMsg" style="color:#c44; font-size:0.85rem; margin-top:6px;" hidden>
+            Passwords do not match.
+          </p>
+        </div>
  
         <button type="button" class="btn btn-filled login-submit" onclick="handleSignUp()">
           Sign Up
@@ -105,6 +123,16 @@
     async function handleSignUp() {
       const username = document.getElementById('username').value;
       const password = document.getElementById('password').value;
+
+      const confirmPassword = document.getElementById('confirmPassword').value;
+      const mismatchMsg = document.getElementById('passwordMismatchMsg');
+
+      if (password !== confirmPassword) {
+        mismatchMsg.hidden = false;
+        return;
+      } else {
+        mismatchMsg.hidden = true;
+      }
  
       const apiBaseUrl = "http://127.0.0.1:5000";
 
