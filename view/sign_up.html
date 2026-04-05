@@ -37,6 +37,10 @@
               required
             />
           </div>
+
+          <p id="usernameTakenMsg" style="color:#c44; font-size:0.85rem; margin-top:6px;" hidden>
+            Username is already taken. Please choose a different username.
+          </p>
         </div>
  
         <div class="login-field">
@@ -128,15 +132,31 @@
 
       const confirmPassword = document.getElementById('confirmPassword').value;
       const mismatchMsg = document.getElementById('passwordMismatchMsg');
+      const usernameTakenMsg = document.getElementById('usernameTakenMsg');
 
       if (password !== confirmPassword) {
         mismatchMsg.hidden = false;
+        usernameTakenMsg.hidden = true;
         return;
       } else {
         mismatchMsg.hidden = true;
       }
  
       const apiBaseUrl = "http://127.0.0.1:5000";
+
+      // Make sure the username is not already taken
+      try {
+        const response = await fetch(`${apiBaseUrl}/authentication/user_exists/${username}`);
+        if (!response.ok) throw new Error("Could not check if username is already taken.");
+        const data = await response.json();
+        if (data.exists) {
+          usernameTakenMsg.hidden = false;
+          return;
+        }
+        usernameTakenMsg.hidden = true;
+      } catch (err) {
+        alert("Unable to reach the server. Please try again.");
+      }
 
       try {
         const response = await fetch(`${apiBaseUrl}/authentication/create_user/${username}/${password}`, {method: "POST"}); // Sends POST request to create_user endpoint
