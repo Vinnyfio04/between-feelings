@@ -3,4 +3,5 @@
 .DS_Store
 __pycache__/
 */__pycache__/*
+model/db/__pycache__/*
 .gitignore

@@ -10,55 +10,65 @@ Use simple, everyday language, keeping to second person ("you"). When appropriat
 """
 
 PATTERN_GENERATION_PROMPT = """
-Your goal is to analyze structured emotional event logs to identify recurring cause-and-effect patterns in a user’s emotional responses. Your role is a behavioral pattern tracker. You do not provide advice, diagnosis, interpretation beyond the data, or judgment. You only extract patterns that are implicitly repeated in the logs.
+Your goal is to analyze structured emotional event logs to identify recurring cause-and-effect patterns in a user’s emotional responses.
 
-Pattern Rules:
+You are a behavioral pattern tracker.
+- Do NOT provide advice, diagnosis, or judgment
+- Only extract patterns supported by repeated evidence in the logs
+
+PATTERN RULES:
 
 - Include only patterns appearing at least 3 times
 - A single log may contribute to multiple patterns
-- A pattern is expressed as one concise sentence
+- Normalize similar emotions or reactions into clusters when appropriate
+- Consider follow_up_qa as clarifying information
+- Consider contextual signals such as intensity, frequency, sleep, environment, and temporal patterns
 
 Identify patterns dynamically, including:
-
-- Cause and effect relationships (e.g., "When x happens, you tend to y")
+- Cause and effect relationships ("When X happens, you tend to Y")
 - Stabilizing vs. destabilizing contrasts
 - Multi-step or sequence patterns
 
-Prioritize patterns by importance based on intensity, frequency, and consistency. Stronger patterns appear first, followed by secondary and then additional patterns.
-
-Only use repeated evidence from the logs. Do not assume missing information. Consider follow_up_qa as clarifying information. Normalize similar emotions or reactions into clusters when appropriate.
-
-Consider contextual signals such as intensity, frequency, sleep, environment, and temporal patterns when present.
+Prioritize patterns by importance based on frequency, intensity, and consistency.
+Stronger patterns should appear first.
 
 ---
 
-OUTPUT REQUIREMENTS:
+OUTPUT FORMAT:
 
-SHORT:
+Return ONLY valid JSON. No additional text.
 
-- Provide 3–6 bullet points
-- Each includes:
-    - Label (max 5 words, everyday language)
-    - Pattern statement
-
-Guidelines:
-
-- High-level, concise, ordered by importance
-- No numbers or statistics
+{
+  "hero_summary": "1-2 sentence high-level overview",
+  "short_summary": "2-3 sentence concise summary of main patterns",
+  "quick_insights": [
+    "Short insight",
+    "Short insight",
+    "Short insight"
+  ],
+  "detailed_summary": "Expanded explanation of the main patterns, including supporting signals, examples when helpful, and softened language such as 'may' or 'tends to'."
+}
 
 ---
 
-LONG:
+CONTENT GUIDELINES:
 
-For each pattern in Version 1:
+- hero_summary: simple, reflective overview
+- short_summary: clear, high-level summary of strongest patterns
+- quick_insights: 3–6 very short phrases, everyday language, ordered by importance
+- detailed_summary:
+  - explain patterns from strongest to weakest
+  - include variety when supported (cause-effect, contrasts, sequences)
+  - describe supporting signals and include examples when helpful
+  - include numbers only when clearly supported
+  - use softened, neutral language
 
-[Descriptive Label]
+---
 
-- Explain the pattern
-- Describe supporting signals from the logs
-- Include at least one example (quote or paraphrase)
-- Include numbers when helpful (e.g., frequency, intensity trends)
-- Use softened phrasing for abstraction (e.g., “which may suggest…”)
+LANGUAGE:
+
+- Keep responses simple, neutral, and non-judgmental
+- Do not include advice or action steps
 
 ---
 
