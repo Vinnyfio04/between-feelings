@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Your Patterns</title>
+  <link rel="stylesheet" href="style.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+</head>
+<body>
+
+<div class="app-shell">
+
+  <!-- Header -->
+  <header class="top-bar">
+    <button class="icon-btn" id="menuBtn" type="button" aria-label="Open menu">
+      <span class="hamburger"></span>
+    </button>
+    <h1 class="app-title">Between Feelings</h1>
+    <div class="header-spacer"></div>
+  </header>
+
+  <!-- Drawer -->
+  <nav class="drawer" id="drawer">
+    <ul>
+      <li><a href="logs.html">View Logs</a></li>
+      <li><a href="new_log.html">New Log</a></li>
+      <li><a href="patterns.html" class="active">Patterns</a></li>
+      <li><a href="#">LLM Chat</a></li>
+    </ul>
+  </nav>
+  <div class="drawer-backdrop" id="drawerBackdrop"></div>
+
+  <!-- Main -->
+  <main class="patterns-page">
+    <p id="patternsStatus" class="section-label" aria-live="polite" style="font-size: 1rem;"></p>
+
+    <section class="hero-card">
+      <p class="section-label">WEEKLY REFLECTION</p>
+      <h2>Your emotional patterns</h2>
+      <p id="heroSummary">
+        Over the past week, you most often logged feelings of anxiety,
+        tiredness, and moments of calm.
+      </p>
+    </section>
+
+    <section class="summary-card">
+      <div class="summary-header">
+        <h3>Short Summary</h3>
+        <span class="badge">
+          <img src="logo.svg" class="badge-icon" alt="AI insight icon">
+        </span>
+      </div>
+
+      <div class="summary-box" id="shortSummary">
+        You experience stress most often during high-pressure situations,
+        especially when work builds up. Rest and quiet time help you recover.
+      </div>
+    </section>
+
+    <section class="insight-card">
+      <h3>Quick Insights</h3>
+      <div id="quickInsights">
+        <div class="insight"><span></span> Stress appears before meetings</div>
+        <div class="insight"><span></span> Low energy after long days</div>
+        <div class="insight"><span></span> Calm linked to rest</div>
+      </div>
+    </section>
+
+    <section class="dropdown-card">
+      <button id="toggleBtn" class="dropdown-btn" type="button">
+        View Detailed Summary ▼
+      </button>
+
+      <div id="dropdownContent" class="dropdown-content">
+        <p id="detailedSummary">
+          Your logs show repeated stress before responsibilities.
+          You are aware of your emotions, and recovery often comes
+          from stepping away and resting.
+        </p>
+      </div>
+    </section>
+
+  </main>
+
+</div>
+
+<script>
+const menuBtn = document.getElementById("menuBtn");
+const drawer = document.getElementById("drawer");
+const backdrop = document.getElementById("drawerBackdrop");
+
+menuBtn.onclick = () => {
+  drawer.classList.add("open");
+  backdrop.classList.add("show");
+};
+
+backdrop.onclick = () => {
+  drawer.classList.remove("open");
+  backdrop.classList.remove("show");
+};
+
+const toggleBtn = document.getElementById("toggleBtn");
+const content = document.getElementById("dropdownContent");
+
+toggleBtn.onclick = () => {
+  content.classList.toggle("open");
+};
+
+const apiBaseUrl = "http://127.0.0.1:5000"; // Base URL for the API (local for now)
+const currentUserId = sessionStorage.getItem("currentUserId") // Get the user id from the session storage
+
+if (!currentUserId) {
+  window.location.href = "authentication.html";
+} else {
+  const patternsStatus = document.getElementById("patternsStatus");
+  const heroSummary = document.getElementById("heroSummary");
+  const shortSummary = document.getElementById("shortSummary");
+  const quickInsights = document.getElementById("quickInsights");
+  const detailedSummary = document.getElementById("detailedSummary");
+
+  function isBlank(value) {
+    return !value || !String(value).trim();
+  }
+
+  function setFallbackContent() {
+    heroSummary.textContent = "We need a little more recent logging data before we can show reliable patterns.";
+    shortSummary.textContent = "Keep adding a few emotion logs across different days to unlock a clearer summary.";
+    quickInsights.innerHTML = "";
+    const insight = document.createElement("div");
+    insight.className = "insight";
+    insight.innerHTML = "<span></span> Add a few more entries to generate insights.";
+    quickInsights.appendChild(insight);
+    detailedSummary.textContent = "Once more logs are available, your detailed emotional pattern summary will appear here.";
+  }
+
+  function renderLoading() {
+    patternsStatus.textContent = "Loading your patterns...";
+  }
+
+  function renderError() {
+    patternsStatus.textContent = "Unable to load patterns right now.";
+    setFallbackContent();
+  }
+
+  function renderEmpty() {
+    patternsStatus.textContent = "Not enough data yet to generate patterns.";
+    setFallbackContent();
+  }
+
+  function renderPatterns(data) {
+    const hero = data.hero_summary;
+    const short = data.short_summary;
+    const detailed = data.detailed_summary;
+    const insights = Array.isArray(data.quick_insights)
+      ? data.quick_insights.filter((item) => !isBlank(item))
+      : [];
+
+    if (isBlank(hero) || isBlank(short) || isBlank(detailed) || insights.length === 0) {
+      renderEmpty();
+      return;
+    }
+
+    heroSummary.textContent = hero.trim();
+    shortSummary.textContent = short.trim();
+    detailedSummary.textContent = detailed.trim();
+
+    quickInsights.innerHTML = "";
+    insights.forEach((item) => {
+      const insight = document.createElement("div");
+      insight.className = "insight";
+      insight.innerHTML = "<span></span>";
+      insight.append(document.createTextNode(" " + item.trim()));
+      quickInsights.appendChild(insight);
+    });
+
+    patternsStatus.textContent = "";
+  }
+
+  async function loadPatterns() {
+    renderLoading();
+    try {
+      const response = await fetch(`${apiBaseUrl}/patterns/${currentUserId}`);
+      if (!response.ok) {
+        throw new Error("Could not load patterns.");
+      }
+      const data = await response.json();
+      renderPatterns(data);
+    } catch (error) {
+      renderError();
+    }
+  }
+
+  window.addEventListener("load", loadPatterns);
+}
+</script>
+
+</body>
+</html>
