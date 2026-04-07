@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import Any, Dict, List, Optional
 
 import db_logging as db_log
 import authentication as auth
@@ -39,7 +39,7 @@ def generate_chat_text(
 def generate_patterns_summary(
     logs: Optional[List[EmotionLog]] = None,
     user_id: Optional[int] = None,
-) -> str:
+) -> Dict[str, Any]:
     return tg.generate_patterns_summary(logs=logs, user_id=user_id)
 
 def generate_followup_questions(log: EmotionLog) -> str:

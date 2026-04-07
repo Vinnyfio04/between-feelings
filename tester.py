@@ -112,5 +112,99 @@ class TestDbLogging(unittest.TestCase):
         # print(prompt)
 
 
+class TestPatternSummaryJsonParsing(unittest.TestCase):
+    @patch("text_generation.generate_text")
+    @patch("text_generation.build_patterns_summary_prompt")
+    def test_generate_patterns_summary_valid_json_returns_dict(
+        self, mock_build_prompt, mock_generate_text
+    ):
+        log = emotion_log.EmotionLog(
+            1, 1, "Anxious", "Before meeting", "2025-01-01", "deadline", 8, "poor", "QA"
+        )
+        mock_build_prompt.return_value = "prompt"
+        mock_generate_text.return_value = (
+            '{"hero_summary":"h","short_summary":"s","quick_insights":["i1"],"detailed_summary":"d"}'
+        )
+
+        result = text_generation.generate_patterns_summary(logs=[log])
+
+        self.assertIsInstance(result, dict)
+        self.assertEqual(result["hero_summary"], "h")
+
+    @patch("text_generation.generate_text")
+    @patch("text_generation.build_patterns_summary_prompt")
+    def test_generate_patterns_summary_malformed_json_raises_value_error(
+        self, mock_build_prompt, mock_generate_text
+    ):
+        log = emotion_log.EmotionLog(
+            1, 1, "Anxious", "Before meeting", "2025-01-01", "deadline", 8, "poor", "QA"
+        )
+        mock_build_prompt.return_value = "prompt"
+        mock_generate_text.return_value = '{"hero_summary": "h"'
+
+        with self.assertRaisesRegex(ValueError, "not valid JSON"):
+            text_generation.generate_patterns_summary(logs=[log])
+
+    @patch("text_generation.generate_text")
+    @patch("text_generation.build_patterns_summary_prompt")
+    def test_generate_patterns_summary_empty_response_raises_value_error(
+        self, mock_build_prompt, mock_generate_text
+    ):
+        log = emotion_log.EmotionLog(
+            1, 1, "Anxious", "Before meeting", "2025-01-01", "deadline", 8, "poor", "QA"
+        )
+        mock_build_prompt.return_value = "prompt"
+        mock_generate_text.return_value = "   "
+
+        with self.assertRaisesRegex(ValueError, "empty"):
+            text_generation.generate_patterns_summary(logs=[log])
+
+    @patch("text_generation.generate_text")
+    @patch("text_generation.build_patterns_summary_prompt")
+    def test_generate_patterns_summary_missing_required_key_raises_value_error(
+        self, mock_build_prompt, mock_generate_text
+    ):
+        log = emotion_log.EmotionLog(
+            1, 1, "Anxious", "Before meeting", "2025-01-01", "deadline", 8, "poor", "QA"
+        )
+        mock_build_prompt.return_value = "prompt"
+        mock_generate_text.return_value = (
+            '{"hero_summary":"h","short_summary":"s","quick_insights":["i1"]}'
+        )
+
+        with self.assertRaisesRegex(ValueError, "missing required field"):
+            text_generation.generate_patterns_summary(logs=[log])
+
+    @patch("text_generation.generate_text")
+    @patch("text_generation.build_patterns_summary_prompt")
+    def test_generate_patterns_summary_non_dict_top_level_raises_value_error(
+        self, mock_build_prompt, mock_generate_text
+    ):
+        log = emotion_log.EmotionLog(
+            1, 1, "Anxious", "Before meeting", "2025-01-01", "deadline", 8, "poor", "QA"
+        )
+        mock_build_prompt.return_value = "prompt"
+        mock_generate_text.return_value = '["not", "an", "object"]'
+
+        with self.assertRaisesRegex(ValueError, "top level"):
+            text_generation.generate_patterns_summary(logs=[log])
+
+    @patch("text_generation.generate_text")
+    @patch("text_generation.build_patterns_summary_prompt")
+    def test_generate_patterns_summary_wrong_field_type_raises_value_error(
+        self, mock_build_prompt, mock_generate_text
+    ):
+        log = emotion_log.EmotionLog(
+            1, 1, "Anxious", "Before meeting", "2025-01-01", "deadline", 8, "poor", "QA"
+        )
+        mock_build_prompt.return_value = "prompt"
+        mock_generate_text.return_value = (
+            '{"hero_summary":"h","short_summary":"s","quick_insights":"not-a-list","detailed_summary":"d"}'
+        )
+
+        with self.assertRaisesRegex(ValueError, "must be of type list"):
+            text_generation.generate_patterns_summary(logs=[log])
+
+
 if __name__ == "__main__":
     unittest.main()
