@@ -11,6 +11,18 @@ from prompt_generation import (
 )
 
 
+class NoLogsAvailableError(ValueError):
+    """Raised when no logs are available for pattern summary generation."""
+
+
+class InvalidLLMJsonError(ValueError):
+    """Raised when the model output is malformed or schema-invalid JSON."""
+
+
+class LLMResponseError(ValueError):
+    """Raised when the model response is unusable for summary generation."""
+
+
 def generate_chat_text(
     chat_input: str,
     logs: Optional[List[EmotionLog]] = None,
@@ -41,11 +53,45 @@ def generate_patterns_summary(
         logs = log_repository.get_logs(user_id)
 
     if not logs:
-        raise ValueError("At least one log is required to generate a pattern summary.")
+        raise NoLogsAvailableError("At least one log is required to generate a pattern summary.")
 
     prompt = build_patterns_summary_prompt(logs=logs)
 
-    raw_text = generate_text(prompt)
+    try:
+        raw_text = generate_text(prompt)
+        # region agent log
+        print(f"[DEBUG patterns raw_text] {raw_text}")
+        try:
+            with open("/Users/jacoblee/Desktop/3.2/hcdd412/between-feelings/.cursor/debug-71f2c0.log", "a", encoding="utf-8") as _f:
+                _f.write(json.dumps({
+                    "sessionId": "71f2c0",
+                    "runId": "pre-fix",
+                    "hypothesisId": "H1-H5",
+                    "location": "controller/text_generation.py:62",
+                    "message": "generate_text succeeded with raw patterns payload",
+                    "data": {"raw_text": raw_text},
+                    "timestamp": __import__("time").time_ns() // 1_000_000,
+                }) + "\n")
+        except Exception:
+            pass
+        # endregion
+    except Exception as exc:
+        # region agent log
+        try:
+            with open("/Users/jacoblee/Desktop/3.2/hcdd412/between-feelings/.cursor/debug-71f2c0.log", "a", encoding="utf-8") as _f:
+                _f.write(json.dumps({
+                    "sessionId": "71f2c0",
+                    "runId": "post-fix",
+                    "hypothesisId": "H7",
+                    "location": "controller/text_generation.py:80",
+                    "message": "generate_text raised exception",
+                    "data": {"error_type": type(exc).__name__, "error": str(exc)},
+                    "timestamp": __import__("time").time_ns() // 1_000_000,
+                }) + "\n")
+        except Exception:
+            pass
+        # endregion
+        raise LLMResponseError(f"Pattern summary generation failed: {str(exc)}") from exc
     return _parse_and_validate_patterns_json(raw_text)
 
 
@@ -58,15 +104,39 @@ def generate_followup_questions(log: EmotionLog) -> str:
 
 def _parse_and_validate_patterns_json(raw_text: str) -> Dict[str, Any]:
     if not raw_text or not raw_text.strip():
-        raise ValueError("Patterns response is empty.")
+        raise InvalidLLMJsonError("Patterns response is empty.")
+
+    candidate = raw_text.strip()
+    if candidate.startswith("```"):
+        first_newline = candidate.find("\n")
+        if first_newline != -1:
+            candidate = candidate[first_newline + 1 :]
+        if candidate.endswith("```"):
+            candidate = candidate[:-3]
+        candidate = candidate.strip()
+        # region agent log
+        try:
+            with open("/Users/jacoblee/Desktop/3.2/hcdd412/between-feelings/.cursor/debug-71f2c0.log", "a", encoding="utf-8") as _f:
+                _f.write(json.dumps({
+                    "sessionId": "71f2c0",
+                    "runId": "post-fix",
+                    "hypothesisId": "H3",
+                    "location": "controller/text_generation.py:89",
+                    "message": "stripped markdown fences from patterns response",
+                    "data": {"had_fence": True, "starts_with_brace": candidate.startswith("{")},
+                    "timestamp": __import__("time").time_ns() // 1_000_000,
+                }) + "\n")
+        except Exception:
+            pass
+        # endregion
 
     try:
-        data = json.loads(raw_text)
+        data = json.loads(candidate)
     except json.JSONDecodeError as exc:
-        raise ValueError("Patterns response is not valid JSON.") from exc
+        raise InvalidLLMJsonError("Patterns response is not valid JSON.") from exc
 
     if not isinstance(data, dict):
-        raise ValueError("Patterns response must be a JSON object at the top level.")
+        raise InvalidLLMJsonError("Patterns response must be a JSON object at the top level.")
 
     required_fields = {
         "hero_summary": str,
@@ -77,14 +147,20 @@ def _parse_and_validate_patterns_json(raw_text: str) -> Dict[str, Any]:
 
     missing_fields = [key for key in required_fields if key not in data]
     if missing_fields:
-        raise ValueError(
+        raise InvalidLLMJsonError(
             f"Patterns response is missing required field(s): {', '.join(missing_fields)}."
         )
 
     for field_name, expected_type in required_fields.items():
         if not isinstance(data[field_name], expected_type):
-            raise ValueError(
+            raise InvalidLLMJsonError(
                 f"Patterns response field '{field_name}' must be of type {expected_type.__name__}."
             )
+
+    quick_insights = data["quick_insights"]
+    if any(not isinstance(item, str) for item in quick_insights):
+        raise InvalidLLMJsonError(
+            "Patterns response field 'quick_insights' must be a list of strings."
+        )
 
     return data
