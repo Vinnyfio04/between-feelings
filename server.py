@@ -6,6 +6,8 @@ import sys
 from flask import Flask, jsonify # Python Flask module for creating a web application
 from flask_cors import CORS # Python Flask CORS module for enabling Cross-Origin Resource Sharing
 
+# SERVER_START_TIME = time.perf_counter() # Uncomment this to measure startup time
+
 
 PROJECT_ROOT = Path(__file__).resolve().parent # Path to the project root directory for code reuse
 CONTROLLER_DIR = PROJECT_ROOT / "controller"
@@ -13,12 +15,13 @@ CONTROLLER_DIR = PROJECT_ROOT / "controller"
 if str(CONTROLLER_DIR) not in sys.path: # If the controller directory is not in the system path, add it to the system path
     sys.path.insert(0, str(CONTROLLER_DIR))
 
-import controller  # noqa: E402 # Import the controller module in order to gain access to get_logs function
-from text_generation import (  # noqa: E402
-    NoLogsAvailableError,
-    InvalidLLMJsonError,
-    LLMResponseError,
-)
+import controller
+
+from text_generation import (
+        NoLogsAvailableError,
+        InvalidLLMJsonError,
+        LLMResponseError,
+    )
 
 
 
@@ -153,4 +156,8 @@ def create_user(username: str, password: str):
     return jsonify({"verified": True, "user_id": user_id})
 
 if __name__ == "__main__":
-    app.run(debug=True) # Run the app in debug mode, allow for automatic reloading of the server when code changes are made
+    from waitress import serve
+    print("Hosting server on port 5000!")
+    # startup_elapsed = time.perf_counter() - SERVER_START_TIME # Uncomment this to measure startup time
+    # print(f"Startup import time: {startup_elapsed:.3f}s") # Uncomment this to measure startup time
+    serve(app, host="127.0.0.1", port=5000) 
