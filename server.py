@@ -3,10 +3,8 @@ import json
 import time
 import sys
 
-from flask import Flask, jsonify # Python Flask module for creating a web application
+from flask import Flask, jsonify, request # Python Flask module for creating a web application
 from flask_cors import CORS # Python Flask CORS module for enabling Cross-Origin Resource Sharing
-
-# SERVER_START_TIME = time.perf_counter() # Uncomment this to measure startup time
 
 
 PROJECT_ROOT = Path(__file__).resolve().parent # Path to the project root directory for code reuse
@@ -15,13 +13,12 @@ CONTROLLER_DIR = PROJECT_ROOT / "controller"
 if str(CONTROLLER_DIR) not in sys.path: # If the controller directory is not in the system path, add it to the system path
     sys.path.insert(0, str(CONTROLLER_DIR))
 
-import controller
-
-from text_generation import (
-        NoLogsAvailableError,
-        InvalidLLMJsonError,
-        LLMResponseError,
-    )
+import controller  # noqa: E402 # Import the controller module in order to gain access to get_logs function
+from text_generation import (  # noqa: E402
+    NoLogsAvailableError,
+    InvalidLLMJsonError,
+    LLMResponseError,
+)
 
 
 
@@ -33,6 +30,36 @@ CORS(app) # Enable CORS for the app, prevent browser from blocking requests from
 def get_user_logs(user_id: int):
     logs = controller.get_logs(user_id)
     return jsonify([log.to_dict() for log in logs])
+
+@app.get("/logs/<int:user_id>/<int:log_id>")
+def get_user_log(user_id: int, log_id: int):
+    log = controller.get_log(user_id, log_id)
+    if log is None:
+        return jsonify({"error": "not_found", "message": "Log not found"}), 404
+    return jsonify(log.to_dict())
+
+@app.put("/logs/<int:user_id>/<int:log_id>")
+def update_user_log(user_id: int, log_id: int):
+    existing_log = controller.get_log(user_id, log_id)
+    if existing_log is None:
+        return jsonify({"updated": False, "error": "not_found"}), 404
+
+    payload = request.get_json(silent=True) or {}
+    updated_log = controller.EmotionLog(
+        log_id=log_id,
+        user_id=user_id,
+        label=payload.get("label", existing_log.label),
+        description=payload.get("description", existing_log.description),
+        date=payload.get("date", existing_log.date),
+        trigger=payload.get("trigger", existing_log.trigger),
+        intensity=payload.get("intensity", existing_log.intensity),
+        sleep_quality=payload.get("sleep_quality", existing_log.sleep_quality),
+        follow_up_qa=payload.get("follow_up_qa", existing_log.follow_up_qa),
+    )
+    updated = controller.update_log(log_id, updated_log)
+    if not updated:
+        return jsonify({"updated": False}), 400
+    return jsonify({"updated": True})
 
 
 @app.get("/patterns/<int:user_id>")
@@ -156,8 +183,4 @@ def create_user(username: str, password: str):
     return jsonify({"verified": True, "user_id": user_id})
 
 if __name__ == "__main__":
-    from waitress import serve
-    print("Hosting server on port 5000!")
-    # startup_elapsed = time.perf_counter() - SERVER_START_TIME # Uncomment this to measure startup time
-    # print(f"Startup import time: {startup_elapsed:.3f}s") # Uncomment this to measure startup time
-    serve(app, host="127.0.0.1", port=5000) 
+    app.run(debug=True) # Run the app in debug mode, allow for automatic reloading of the server when code changes are made

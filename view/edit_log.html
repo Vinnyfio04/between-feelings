@@ -40,36 +40,36 @@
 
       <!-- meta info -->
       <div class="edit-meta">
-        <span class="meta-pill">Log ID: #013</span>
-        <span class="meta-pill">Last updated: Today</span>
+        <span class="meta-pill" id="logIdPill">Log ID: #---</span>
+        <span class="meta-pill" id="updatedPill">Last updated: --</span>
       </div>
 
       <!-- form -->
       <label>Talk about your experience.</label>
-      <textarea>I felt stressed after finishing multiple assignments and preparing for class.</textarea>
+      <textarea id="descriptionInput" placeholder="Describe your experience..."></textarea>
 
       <label>How would you describe how it made you feel?</label>
-      <input type="text" value="Stressed" />
+      <input type="text" id="labelInput" />
 
       <label>What do you think caused that feeling?</label>
-      <input type="text" value="Schoolwork and deadlines" />
+      <input type="text" id="triggerInput" />
 
       <!-- intensity -->
       <label>Intensity</label>
       <div class="slider-wrap">
-        <input type="range" min="1" max="5" value="4" />
+        <input type="range" min="1" max="10" value="5" id="intensityInput" />
         <div class="range-marks">
           <span></span><span></span><span></span><span></span><span></span>
         </div>
         <div class="range-labels numbers">
-          <span>1</span><span></span><span></span><span></span><span>5</span>
+          <span>1</span><span></span><span></span><span></span><span>10</span>
         </div>
       </div>
 
       <!-- sleep -->
       <label>Sleep Quality</label>
       <div class="slider-wrap">
-        <input type="range" min="1" max="3" value="2" />
+        <input type="range" min="1" max="3" value="2" id="sleepInput" />
         <div class="range-labels">
           <span>Poor</span>
           <span>Average</span>
@@ -79,8 +79,8 @@
 
       <!-- buttons -->
       <div class="edit-actions">
-        <button class="sub-btn">Cancel</button>
-        <button class="main-btn">Save Changes</button>
+        <button class="sub-btn" type="button" id="cancelBtn">Cancel</button>
+        <button class="main-btn" type="button" id="saveBtn">Save Changes</button>
       </div>
 
     </section>
@@ -93,6 +93,20 @@
 const menuBtn = document.getElementById("menuBtn");
 const drawer = document.getElementById("drawer");
 const backdrop = document.getElementById("drawerBackdrop");
+const descriptionInput = document.getElementById("descriptionInput");
+const labelInput = document.getElementById("labelInput");
+const triggerInput = document.getElementById("triggerInput");
+const intensityInput = document.getElementById("intensityInput");
+const sleepInput = document.getElementById("sleepInput");
+const logIdPill = document.getElementById("logIdPill");
+const updatedPill = document.getElementById("updatedPill");
+const cancelBtn = document.getElementById("cancelBtn");
+const saveBtn = document.getElementById("saveBtn");
+
+const apiBaseUrl = "http://127.0.0.1:5000";
+const currentUserId = sessionStorage.getItem("currentUserId");
+const urlParams = new URLSearchParams(window.location.search);
+const logId = urlParams.get("log_id");
 
 menuBtn.onclick = () => {
   drawer.classList.add("open");
@@ -103,6 +117,87 @@ backdrop.onclick = () => {
   drawer.classList.remove("open");
   backdrop.classList.remove("show");
 };
+
+function formatDate(rawDate) {
+  const parsedDate = new Date(rawDate);
+  if (Number.isNaN(parsedDate.getTime())) return rawDate || "--";
+  return parsedDate.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+}
+
+function mapSleepValueToLabel(value) {
+  if (String(value) === "1") return "Poor";
+  if (String(value) === "3") return "Good";
+  return "Average";
+}
+
+function mapSleepLabelToValue(label) {
+  const normalized = String(label || "").toLowerCase();
+  if (normalized === "poor") return "1";
+  if (normalized === "good") return "3";
+  return "2";
+}
+
+async function loadLog() {
+  if (!currentUserId) {
+    window.location.href = "authentication.html";
+    return;
+  }
+  if (!logId) {
+    alert("No log selected.");
+    window.location.href = "logs.html";
+    return;
+  }
+  try {
+    const response = await fetch(`${apiBaseUrl}/logs/${currentUserId}/${encodeURIComponent(logId)}`);
+    if (!response.ok) throw new Error("Could not load this log.");
+    const log = await response.json();
+
+    logIdPill.textContent = `Log ID: #${log.log_id}`;
+    updatedPill.textContent = `Last updated: ${formatDate(log.date)}`;
+    descriptionInput.value = log.description || "";
+    labelInput.value = log.label || "";
+    triggerInput.value = log.trigger || "";
+    intensityInput.value = Number(log.intensity || 1);
+    sleepInput.value = mapSleepLabelToValue(log.sleep_quality);
+  } catch (error) {
+    alert("Unable to load this entry.");
+    window.location.href = "logs.html";
+  }
+}
+
+async function saveChanges() {
+  const payload = {
+    label: labelInput.value.trim(),
+    description: descriptionInput.value.trim(),
+    trigger: triggerInput.value.trim(),
+    intensity: Number(intensityInput.value),
+    sleep_quality: mapSleepValueToLabel(sleepInput.value)
+  };
+
+  try {
+    saveBtn.disabled = true;
+    const response = await fetch(`${apiBaseUrl}/logs/${currentUserId}/${encodeURIComponent(logId)}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(payload)
+    });
+    if (!response.ok) throw new Error("Could not save changes.");
+    window.location.href = "logs.html";
+  } catch (error) {
+    alert("Unable to save changes right now.");
+  } finally {
+    saveBtn.disabled = false;
+  }
+}
+
+cancelBtn.addEventListener("click", () => {
+  window.location.href = "logs.html";
+});
+
+saveBtn.addEventListener("click", saveChanges);
+window.addEventListener("load", loadLog);
 </script>
 
 </body>

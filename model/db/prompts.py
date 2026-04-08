@@ -36,7 +36,7 @@ Stronger patterns should appear first.
 
 OUTPUT FORMAT:
 
-Return ONLY valid JSON. No additional text.
+Return ONLY valid JSON. No additional text or wrappers (e.g. ```json, ```).
 
 {
   "hero_summary": "1-2 sentence high-level overview",

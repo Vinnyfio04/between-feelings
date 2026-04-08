@@ -17,6 +17,7 @@
         <span class="hamburger"></span>
       </button>
       <h1 class="app-title">Between Feelings</h1>
+      <div class="header-spacer"></div>
     </header>
 
     <!-- hamburger menu -->
@@ -136,8 +137,8 @@
           <p class="card-description">${log.description || ""}</p>
         </div>
         <div class="card-actions">
-          <button class="btn btn-outline" data-id="${log.log_id}" onclick="viewEntry(this)">View</button>
-          <button class="btn btn-filled" data-id="${log.log_id}" onclick="editEntry(this)">Edit</button>
+          <button class="btn btn-filled" data-id="${log.log_id}" onclick="viewEntry(this)">View</button>
+          <button class="btn btn-outline" data-id="${log.log_id}" onclick="editEntry(this)">Edit</button>
         </div>
       `;
 
@@ -318,7 +319,7 @@
 
     function editEntry(button) {
       const id = button.dataset.id;
-      alert("Edit entry " + id);
+      window.location.href = `edit_log.html?log_id=${encodeURIComponent(id)}`;
     }
 
     window.addEventListener("load", loadLogs);
