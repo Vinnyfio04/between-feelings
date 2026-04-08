@@ -319,7 +319,7 @@
 
     function editEntry(button) {
       const id = button.dataset.id;
-      alert("Edit entry " + id);
+      window.location.href = `edit_log.html?log_id=${encodeURIComponent(id)}`;
     }
 
     window.addEventListener("load", loadLogs);

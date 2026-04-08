@@ -15,6 +15,9 @@ def update_log(log_id, log):
 def get_logs(user_id):
     return db_log.get_logs(user_id)
 
+def get_log(user_id, log_id):
+    return db_log.get_log(user_id, log_id)
+
 def delete_log(user_id, log_id):
     return db_log.delete_log(user_id, log_id)
 

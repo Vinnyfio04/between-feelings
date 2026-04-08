@@ -63,6 +63,37 @@ def get_logs(user_id: int) -> List[EmotionLog]:
     return logs
 
 
+def get_log(user_id: int, log_id: int):
+    conn = get_connection()
+    cur = conn.cursor()
+
+    query = """
+    SELECT * FROM emotion_logs
+    WHERE user_id = %s AND log_id = %s
+    """
+
+    cur.execute(query, (user_id, log_id))
+    row = cur.fetchone()
+
+    cur.close()
+    conn.close()
+
+    if row is None:
+        return None
+
+    return EmotionLog(
+        log_id=row[0],
+        user_id=row[1],
+        label=row[2],
+        description=row[3],
+        date=row[4],
+        trigger=row[5],
+        intensity=row[6],
+        sleep_quality=row[7],
+        follow_up_qa=row[8],
+    )
+
+
 def save_log(log: EmotionLog) -> bool:
     conn = get_connection()
     cur = conn.cursor()
