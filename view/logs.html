@@ -26,7 +26,7 @@
         <li><a href="logs.html" class="active">View Logs</a></li>
         <li><a href="new_log.html">New Log</a></li>
         <li><a href="patterns.html">Patterns</a></li>
-        <li><a href="chat.html">LLM Chat</a></li>
+        <li><a href="#">LLM Chat</a></li>
       </ul>
     </nav>
     <div class="drawer-backdrop" id="drawerBackdrop"></div>
@@ -71,6 +71,43 @@
     <!-- log list -->
     <main class="log-list" id="logList"></main>
 
+    <!-- view overlay -->
+    <div class="view-overlay-backdrop" id="viewOverlayBackdrop" aria-hidden="true"></div>
+    <section class="view-overlay" id="viewOverlay" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="viewLogTitle">
+      <main class="log-form-page">
+        <section class="edit-card">
+          <p class="section-label">VIEW ENTRY</p>
+          <h2 id="viewLogTitle">Log Entry</h2>
+          <div class="edit-meta">
+            <span class="meta-pill" id="viewLogId">Log ID: #--</span>
+            <span class="meta-pill" id="viewLogDate">Date: --</span>
+          </div>
+
+          <label>How would you describe how it made you feel?</label>
+          <div class="view-field" id="viewLabel">--</div>
+
+          <label>Talk about your experience.</label>
+          <div class="view-field view-field-multiline" id="viewDescription">--</div>
+
+          <label>What do you think caused that feeling?</label>
+          <div class="view-field" id="viewTrigger">--</div>
+
+          <label>Intensity</label>
+          <div class="view-field" id="viewIntensity">--</div>
+
+          <label>Sleep Quality</label>
+          <div class="view-field" id="viewSleepQuality">--</div>
+
+          <label>Follow-up Q&A</label>
+          <div class="view-field view-field-multiline" id="viewFollowUp">--</div>
+
+          <div class="edit-actions">
+            <button type="button" class="sub-btn" id="closeViewOverlayBtn">Close</button>
+          </div>
+        </section>
+      </main>
+    </section>
+
     <footer class="bottom-bar" style="display:none;"></footer>
 
   </div>
@@ -86,6 +123,17 @@
     const searchInput = document.getElementById("searchInput");
     const sortBtn = document.getElementById("sortBtn");
     const logList = document.getElementById("logList");
+    const viewOverlay = document.getElementById("viewOverlay");
+    const viewOverlayBackdrop = document.getElementById("viewOverlayBackdrop");
+    const closeViewOverlayBtn = document.getElementById("closeViewOverlayBtn");
+    const viewLogId = document.getElementById("viewLogId");
+    const viewLogDate = document.getElementById("viewLogDate");
+    const viewLabel = document.getElementById("viewLabel");
+    const viewDescription = document.getElementById("viewDescription");
+    const viewTrigger = document.getElementById("viewTrigger");
+    const viewIntensity = document.getElementById("viewIntensity");
+    const viewSleepQuality = document.getElementById("viewSleepQuality");
+    const viewFollowUp = document.getElementById("viewFollowUp");
 
     const chips = document.querySelectorAll(".chip");
 
@@ -243,6 +291,32 @@
       applyFilters();
     }
 
+    function formatOverlayDate(rawDate) {
+      const parsedDate = new Date(rawDate);
+      if (Number.isNaN(parsedDate.getTime())) {
+        return rawDate || "--";
+      }
+      return parsedDate.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+    }
+
+    function setViewField(element, value) {
+      element.textContent = (value ?? "").toString().trim() || "--";
+    }
+
+    function openViewOverlay() {
+      viewOverlay.classList.add("open");
+      viewOverlayBackdrop.classList.add("visible");
+      viewOverlay.setAttribute("aria-hidden", "false");
+      viewOverlayBackdrop.setAttribute("aria-hidden", "false");
+    }
+
+    function closeViewOverlay() {
+      viewOverlay.classList.remove("open");
+      viewOverlayBackdrop.classList.remove("visible");
+      viewOverlay.setAttribute("aria-hidden", "true");
+      viewOverlayBackdrop.setAttribute("aria-hidden", "true");
+    }
+
     menuBtn.addEventListener("click", () => {
       drawer.classList.add("open");
       drawerBackdrop.classList.add("visible");
@@ -253,6 +327,14 @@
       drawer.classList.remove("open");
       drawerBackdrop.classList.remove("visible");
       drawer.setAttribute("aria-hidden", "true");
+    });
+
+    viewOverlayBackdrop.addEventListener("click", () => {
+      closeViewOverlay();
+    });
+
+    closeViewOverlayBtn.addEventListener("click", () => {
+      closeViewOverlay();
     });
 
     filterBtn.addEventListener("click", () => {
@@ -312,9 +394,33 @@
       closeAllCardMenus();
     });
 
-    function viewEntry(button) {
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && viewOverlay.classList.contains("open")) {
+        closeViewOverlay();
+      }
+    });
+
+    async function viewEntry(button) {
       const id = button.dataset.id;
-      alert("View entry " + id);
+      try {
+        const response = await fetch(`${apiBaseUrl}/logs/${currentUserId}/${encodeURIComponent(id)}`);
+        if (!response.ok) {
+          throw new Error("Could not load selected log.");
+        }
+        const log = await response.json();
+
+        setViewField(viewLogId, `Log ID: #${log.log_id ?? "--"}`);
+        setViewField(viewLogDate, `Date: ${formatOverlayDate(log.date)}`);
+        setViewField(viewLabel, log.label);
+        setViewField(viewDescription, log.description);
+        setViewField(viewTrigger, log.trigger);
+        setViewField(viewIntensity, log.intensity);
+        setViewField(viewSleepQuality, log.sleep_quality);
+        setViewField(viewFollowUp, log.follow_up_qa);
+        openViewOverlay();
+      } catch (error) {
+        alert("Unable to load this entry right now.");
+      }
     }
 
     function editEntry(button) {
