@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>LLM Chat</title>
+  <title>AI Chat</title>
   <link rel="stylesheet" href="style.css"/>
   <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
 </head>
@@ -24,7 +24,7 @@
       <li><a href="logs.html">View Logs</a></li>
       <li><a href="new_log.html">New Log</a></li>
       <li><a href="patterns.html">Patterns</a></li>
-      <li><a href="chat.html" class="active">LLM Chat</a></li>
+      <li><a href="chat.html" class="active">AI Chat</a></li>
     </ul>
   </nav>
   <div class="drawer-backdrop" id="drawerBackdrop"></div>
@@ -36,11 +36,11 @@
       <section class="log-card page active" id="chatPage" style="max-width: 360px; width: 100%;">
 
         <p class="section-label">ONE TURN</p>
-        <h2>LLM Chat</h2>
+        <h2>AI Chat</h2>
 
         <div class="question-box" style="margin-bottom: 12px;">
-          <p class="question-title" style="text-align: center; color: var(--text);">
-            Ask me anything about your emotions
+          <p class="question-title" style="color: var(--text);">
+            Ask me anything about your logs.
           </p>
         </div>
 
@@ -51,7 +51,7 @@
           <button class="main-btn" id="sendBtn" type="button">Send</button>
         </div>
 
-        <label for="outputBox" style="margin-top: 18px;">LLM</label>
+        <label for="outputBox" style="margin-top: 18px;">AI Response</label>
         <div class="question-box" id="outputBox">
           <p id="outputText">
             Response will appear here.
