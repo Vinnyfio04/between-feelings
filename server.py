@@ -182,5 +182,43 @@ def create_user(username: str, password: str):
     user_id = controller.create_user(username, password)
     return jsonify({"verified": True, "user_id": user_id})
 
+@app.post("/chat/<int:user_id>")
+def chat(user_id: int):
+    if user_id <= 0:
+        return jsonify({
+            "error": "invalid_user_id",
+            "message": "user_id must be a positive integer",
+        }), 400
+
+    payload = request.get_json(silent=True)
+    if not isinstance(payload, dict):
+        return jsonify({
+            "error": "bad_request",
+            "message": "Expected JSON object with non-empty string field 'chat_input'.",
+        }), 400
+
+    chat_input = payload.get("chat_input")
+    if not isinstance(chat_input, str) or not chat_input.strip():
+        return jsonify({
+            "error": "bad_request",
+            "message": "chat_input must be a non-empty string.",
+        }), 400
+
+    trimmed_input = chat_input.strip()
+
+    try:
+        reply = controller.generate_chat_text(chat_input=trimmed_input, user_id=user_id)
+        return jsonify({"reply": reply})
+    except ValueError as exc:
+        return jsonify({
+            "error": "llm_failure",
+            "message": f"Chat generation failed: {str(exc)}",
+        }), 502
+    except Exception as exc:
+        return jsonify({
+            "error": "internal_error",
+            "message": f"Unexpected internal error: {str(exc)}",
+        }), 500
+
 if __name__ == "__main__":
     app.run(debug=True) # Run the app in debug mode, allow for automatic reloading of the server when code changes are made

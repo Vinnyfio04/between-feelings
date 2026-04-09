@@ -44,7 +44,7 @@
           </p>
         </div>
 
-        <label for="userInput">username</label>
+        <label for="userInput">Message</label>
         <textarea id="userInput" placeholder="Type your message..."></textarea>
 
         <div class="bottom-area" style="margin-top: 14px;">
@@ -84,33 +84,55 @@ backdrop.onclick = () => {
 const sendBtn = document.getElementById("sendBtn");
 const input = document.getElementById("userInput");
 const outputText = document.getElementById("outputText");
+const apiBaseUrl = "http://127.0.0.1:5000";
+const currentUserId = sessionStorage.getItem("currentUserId");
 
-sendBtn.onclick = () => {
-  const text = input.value.trim();
+if (!currentUserId) {
+  window.location.href = "authentication.html";
+} else {
+  sendBtn.onclick = async () => {
+    const text = input.value.trim();
 
-  if (!text) {
-    outputText.textContent = "Please enter a message first.";
-    return;
-  }
+    if (!text) {
+      outputText.textContent = "Please enter a message first.";
+      return;
+    }
 
-  let reply = "This response is based only on your current input.";
+    outputText.style.color = "var(--text)";
+    outputText.textContent = "Generating response...";
 
-  if (text.toLowerCase().includes("stress")) {
-    reply = "It sounds like stress may be affecting you right now.";
-  } 
-  else if (text.toLowerCase().includes("sad")) {
-    reply = "It sounds like you may be feeling low right now.";
-  } 
-  else if (text.toLowerCase().includes("angry")) {
-    reply = "It sounds like something may have crossed your boundary.";
-  } 
-  else if (text.toLowerCase().includes("happy")) {
-    reply = "That sounds like a positive moment.";
-  }
+    try {
+      const response = await fetch(`${apiBaseUrl}/chat/${currentUserId}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ chat_input: text }),
+      });
 
-  outputText.style.color = "var(--text)";
-  outputText.textContent = reply;
-};
+      let data = null;
+      try {
+        data = await response.json();
+      } catch (_) {
+        data = null;
+      }
+
+      if (!response.ok) {
+        const message = data && data.message
+          ? data.message
+          : "Unable to generate a response right now.";
+        outputText.textContent = message;
+        return;
+      }
+
+      outputText.textContent = data && data.reply
+        ? data.reply
+        : "No response was returned.";
+    } catch (error) {
+      outputText.textContent = "Unable to reach the server. Please try again.";
+    }
+  };
+}
 </script>
 
 </body>
