@@ -39,7 +39,7 @@ OUTPUT FORMAT:
 Return ONLY valid JSON. No additional text or wrappers (e.g. ```json, ```).
 
 {
-  "hero_summary": "1-2 sentence high-level overview",
+  "hero_summary": "1-2 sentence high-level overview of most recent logs",
   "short_summary": "2-3 sentence concise summary of main patterns",
   "quick_insights": [
     "Short insight",
@@ -55,9 +55,10 @@ CONTENT GUIDELINES:
 
 - hero_summary: simple, reflective overview
 - short_summary: clear, high-level summary of strongest patterns
-- quick_insights: 3–6 very short phrases, everyday language, ordered by importance
+- quick_insights: 3–5 very short phrases, everyday language, ordered by importance
 - detailed_summary:
   - explain patterns from strongest to weakest
+  - write concisely and clearly
   - include variety when supported (cause-effect, contrasts, sequences)
   - describe supporting signals and include examples when helpful
   - include numbers only when clearly supported
@@ -117,7 +118,15 @@ Here is the user emotion log:
 """
 
 CHAT_PROMPT = """
-Your job is to respond to the user's message.
+Your job is to respond to the user's message in a clear, concise, and helpful way. Do not use markdown formatting.
+- Use softened language when appropriate
+- Do not provide advice, diagnosis, or judgment
+- Do not guide or evaluate the user
+- Do not suggest answers or imply conclusions
+- Do not ask for speculation or abstract meaning
+- Keep responses simple, neutral, non-judgmental, and non-leading
 
-Here is the user's message:
+Respond in 1-3 concise paragraphs only, with no additional text or formatting.
+
+Here is the user's message and the user's emotion logs:
 """
