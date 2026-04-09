@@ -98,9 +98,6 @@
           <label>Sleep Quality</label>
           <div class="view-field" id="viewSleepQuality">--</div>
 
-          <label>Follow-up Q&A</label>
-          <div class="view-field view-field-multiline" id="viewFollowUp">--</div>
-
           <div class="edit-actions">
             <button type="button" class="sub-btn" id="closeViewOverlayBtn">Close</button>
           </div>
@@ -133,7 +130,6 @@
     const viewTrigger = document.getElementById("viewTrigger");
     const viewIntensity = document.getElementById("viewIntensity");
     const viewSleepQuality = document.getElementById("viewSleepQuality");
-    const viewFollowUp = document.getElementById("viewFollowUp");
 
     const chips = document.querySelectorAll(".chip");
 
@@ -416,7 +412,6 @@
         setViewField(viewTrigger, log.trigger);
         setViewField(viewIntensity, log.intensity);
         setViewField(viewSleepQuality, log.sleep_quality);
-        setViewField(viewFollowUp, log.follow_up_qa);
         openViewOverlay();
       } catch (error) {
         alert("Unable to load this entry right now.");
