@@ -996,7 +996,7 @@ body {
   }
 }
 #outputBox {
-  height: 200px;
+  height: 340px;  
   overflow-y: auto;
   display: flex;
   align-items: flex-start;
@@ -1010,6 +1010,11 @@ body {
   font-size: 0.875rem;
   font-family: var(--font-body);
   line-height: 1.5;
+}
+
+#userInput {
+  height: 50px;  
+  resize: none;
 }
 
 #userInput::placeholder {
