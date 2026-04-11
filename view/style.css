@@ -996,7 +996,7 @@ body {
   }
 }
 #outputBox {
-  height: 340px;  
+  height: 400px;  
   overflow-y: auto;
   display: flex;
   align-items: flex-start;
