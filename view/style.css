@@ -764,7 +764,7 @@ body {
 
 .log-form-page textarea {
   resize: none;
-  min-height: 110px;
+  min-height: 150px;
 }
 
 .log-form-page input[type="text"]:focus,
@@ -996,7 +996,7 @@ body {
   }
 }
 #outputBox {
-  height: 400px;  
+  height: 300px;  
   overflow-y: auto;
   display: flex;
   align-items: flex-start;
@@ -1013,21 +1013,12 @@ body {
 }
 
 #userInput {
-  height: 50px;  
+  min-height: 75px;
+  height: 75px;
   resize: none;
 }
 
 #userInput::placeholder {
   color: var(--text-muted);
   opacity: 1;
-}
-
-.log-form-page {
-  display: flex;
-  justify-content: center;
-}
-
-#chatPage {
-  width: 100%;
-  max-width: 360px;
 }
