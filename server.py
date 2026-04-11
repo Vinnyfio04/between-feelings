@@ -2,6 +2,7 @@ from pathlib import Path
 import json
 import time
 import sys
+import threading
 
 from flask import Flask, jsonify, request # Python Flask module for creating a web application
 from flask_cors import CORS # Python Flask CORS module for enabling Cross-Origin Resource Sharing
@@ -24,6 +25,16 @@ from text_generation import (  # noqa: E402
 
 app = Flask(__name__)
 CORS(app) # Enable CORS for the app, prevent browser from blocking requests from different origins
+
+# Helper function to generate patterns in the background; caches the result.
+patterns_cache = {}
+def refresh_pattern(user_id: int):
+    patterns_cache[user_id] = {"status": "loading", "data": None, "error": None}
+    try:
+        data = controller.generate_patterns_summary(user_id=user_id)
+        patterns_cache[user_id] = {"status": "success", "data": data, "error": None}
+    except Exception as e:
+        patterns_cache[user_id] = {"status": "error", "data": None, "error": str(e)}
 
 
 @app.get("/logs/<int:user_id>") # Define a route for the get_user_logs function
@@ -71,7 +82,23 @@ def get_patterns_summary(user_id: int):
         }), 400
 
     try:
-        result = controller.generate_patterns_summary(user_id=user_id)
+        result = patterns_cache.get(user_id)
+
+
+        if result is None:
+            threading.Thread(target=refresh_pattern, args=(user_id,), daemon=True).start()
+            return jsonify({"status": "loading"}), 202
+       
+        if result["status"] == "loading":
+            return jsonify({"status": "loading"}), 202
+
+
+        if result["status"] == "success":
+            return jsonify(result["data"]), 200
+
+
+        if result["status"] == "error":
+            return jsonify({"status": "error", "message": result.get("error", "Pattern generation failed.")}), 502
         # region agent log
         try:
             with open("/Users/jacoblee/Desktop/3.2/hcdd412/between-feelings/.cursor/debug-71f2c0.log", "a", encoding="utf-8") as _f:
@@ -163,6 +190,7 @@ def delete_user_log(user_id: int, log_id: int):
     deleted = controller.delete_log(user_id, log_id)
     if not deleted:
         return jsonify({"deleted": False}), 404
+    threading.Thread(target=refresh_pattern, args=(user_id,), daemon=True).start() # Refresh the pattern cache when a log is deleted
     return jsonify({"deleted": True})
 
 @app.get("/authentication/user_exists/<string:username>")
