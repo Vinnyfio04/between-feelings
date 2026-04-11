@@ -38,10 +38,7 @@
     <section class="hero-card">
       <p class="section-label">WEEKLY REFLECTION</p>
       <h2>Your emotional patterns</h2>
-      <p id="heroSummary">
-        Over the past week, you most often logged feelings of anxiety,
-        tiredness, and moments of calm.
-      </p>
+      <p id="heroSummary"></p>
     </section>
 
     <section class="summary-card">
@@ -52,19 +49,12 @@
         </span>
       </div>
 
-      <div class="summary-box" id="shortSummary">
-        You experience stress most often during high-pressure situations,
-        especially when work builds up. Rest and quiet time help you recover.
-      </div>
+      <div class="summary-box" id="shortSummary"></div>
     </section>
 
     <section class="insight-card">
       <h3>Quick Insights</h3>
-      <div id="quickInsights">
-        <div class="insight"><span></span> Stress appears before meetings</div>
-        <div class="insight"><span></span> Low energy after long days</div>
-        <div class="insight"><span></span> Calm linked to rest</div>
-      </div>
+      <div id="quickInsights"></div>
     </section>
 
     <section class="dropdown-card">
@@ -73,11 +63,7 @@
       </button>
 
       <div id="dropdownContent" class="dropdown-content">
-        <p id="detailedSummary">
-          Your logs show repeated stress before responsibilities.
-          You are aware of your emotions, and recovery often comes
-          from stepping away and resting.
-        </p>
+        <p id="detailedSummary"></p>
       </div>
     </section>
 
@@ -134,10 +120,6 @@ if (!currentUserId) {
     detailedSummary.textContent = "Once more logs are available, your detailed emotional pattern summary will appear here.";
   }
 
-  function renderLoading() {
-    patternsStatus.textContent = "Loading your patterns...";
-  }
-
   function renderError() {
     patternsStatus.textContent = "Unable to load patterns right now.";
     setFallbackContent();
@@ -178,14 +160,30 @@ if (!currentUserId) {
   }
 
   async function loadPatterns() {
-    renderLoading();
     try {
       const response = await fetch(`${apiBaseUrl}/patterns/${currentUserId}`);
-      if (!response.ok) {
-        throw new Error("Could not load patterns.");
-      }
       const data = await response.json();
-      renderPatterns(data);
+
+      console.log(data);
+
+      if (response.status === 202) {
+        patternsStatus.textContent = "Generating pattern...";
+        setTimeout(loadPatterns, 1500);
+        return;
+      }
+
+      if (response.status === 200) {
+        renderPatterns(data);
+        return;
+      }
+
+      if (response.status === 502) {
+        patternsStatus.textContent = data.message || "Pattern generation failed.";
+        setFallbackContent();
+        return;
+      }
+
+      renderError();
     } catch (error) {
       renderError();
     }
