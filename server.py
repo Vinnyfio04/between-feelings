@@ -27,7 +27,8 @@ from text_generation import (  # noqa: E402
 app = Flask(__name__)
 CORS(app) # Enable CORS for the app, prevent browser from blocking requests from different origins
 
-# Helper function to generate patterns in the background; caches the result.
+# REF(HCDD-101): patterns generation is long-running, so the UI polls this cache
+# and treats "loading" as a normal state instead of an error.
 patterns_cache = {}
 def refresh_pattern(user_id: int):
     patterns_cache[user_id] = {"status": "loading", "data": None, "error": None}
@@ -39,6 +40,8 @@ def refresh_pattern(user_id: int):
 
 
 def _validate_new_log_payload(payload: dict, user_id: int, require_follow_up_qa: bool):
+    # Keep a single validation path for both "generate questions" and "save log"
+    # so both endpoints enforce the same shape before controller/database calls.
     required_keys = {
         "log_id",
         "label",
@@ -78,7 +81,8 @@ def _validate_new_log_payload(payload: dict, user_id: int, require_follow_up_qa:
         if not isinstance(payload["follow_up_qa"], str):
             return None, {"error": "bad_request", "message": "follow_up_qa must be a string."}
         follow_up_qa = payload["follow_up_qa"].strip()
-    # TEMP WORKAROUND: log_id is frontend-provided because current save path requires it.
+    # TODO(HCDD-202): move log_id generation server-side once insert flow is updated.
+    # The frontend sends it today to stay compatible with existing save behavior.
     log = controller.EmotionLog(
         log_id=payload["log_id"],
         user_id=user_id,
@@ -142,6 +146,8 @@ def get_patterns_summary(user_id: int):
 
 
         if result is None:
+            # First request kicks off background generation. Returning 202 lets the
+            # frontend distinguish "still processing" from real failures.
             threading.Thread(target=refresh_pattern, args=(user_id,), daemon=True).start()
             return jsonify({"status": "loading"}), 202
        
@@ -154,6 +160,8 @@ def get_patterns_summary(user_id: int):
 
 
         if result["status"] == "error":
+            # Upstream model/parse issues are surfaced as 502 to indicate
+            # dependency failure rather than malformed client input.
             return jsonify({"status": "error", "message": result.get("error", "Pattern generation failed.")}), 502
         # region agent log
         try:
@@ -273,6 +281,8 @@ def generate_new_log_followup_questions(user_id: int):
         questions = controller.generate_followup_questions(log)
         return jsonify({"questions": questions}), 200
     except (InvalidFollowupQuestionsError, ValueError) as exc:
+        # Keep model formatting failures in the 5xx family so clients know
+        # retry/help text is more appropriate than asking users to edit payload fields.
         return jsonify({
             "error": "followup_generation_failed",
             "message": f"Follow-up question generation failed: {str(exc)}",
@@ -303,8 +313,8 @@ def create_user_log(user_id: int):
     if validation_error is not None:
         return jsonify(validation_error), 400
 
-    # Minimal validation for now: stronger completion checks depend on a finalized
-    # frontend follow_up_qa string format contract.
+    # TODO(HCDD-203): strengthen completion validation once frontend and backend
+    # agree on a stable follow_up_qa serialization format.
     if not log.follow_up_qa.strip():
         return jsonify({
             "error": "bad_request",

@@ -30,6 +30,8 @@ def _build_prompt(system_prompt: str, task_prompt: str, logs_text: str, user_inp
     Concatenates the prompt in the required order:
     system prompt + relevant prompt + relevant log(s) + optional user input
     """
+    # REF(HCDD-120): preserve section order across features so prompt behavior
+    # and downstream parsing remain predictable during prompt tuning.
     parts = [
         system_prompt.strip(),
         "",

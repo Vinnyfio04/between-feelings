@@ -58,6 +58,8 @@ def generate_patterns_summary(
         logs = log_repository.get_logs(user_id)
 
     if not logs:
+        # REF(HCDD-110): pattern summaries require historical context; generating
+        # from zero logs produces confident-looking but misleading guidance.
         raise NoLogsAvailableError("At least one log is required to generate a pattern summary.")
 
     prompt = build_patterns_summary_prompt(logs=logs)
@@ -114,6 +116,8 @@ def _parse_and_validate_followup_questions(raw_text: str) -> List[str]:
 
     candidate = raw_text.strip()
     if candidate.startswith("```"):
+        # Models sometimes wrap plain text in markdown fences; strip wrappers
+        # so validation checks the payload contract, not presentation formatting.
         first_newline = candidate.find("\n")
         if first_newline != -1:
             candidate = candidate[first_newline + 1 :]
@@ -132,6 +136,8 @@ def _parse_and_validate_followup_questions(raw_text: str) -> List[str]:
         raise InvalidFollowupQuestionsError("Follow-up questions response must be a list.")
 
     if len(parsed) != 3:
+        # REF(HCDD-111): new-log UI currently renders exactly three follow-up slots.
+        # Enforcing this here avoids UI/backend drift.
         raise InvalidFollowupQuestionsError("Follow-up questions response must contain exactly 3 items.")
 
     cleaned_questions: List[str] = []
@@ -152,6 +158,8 @@ def _parse_and_validate_patterns_json(raw_text: str) -> Dict[str, Any]:
 
     candidate = raw_text.strip()
     if candidate.startswith("```"):
+        # The endpoint contract expects JSON only. Strip markdown code fences
+        # because model responses are frequently wrapped for readability.
         first_newline = candidate.find("\n")
         if first_newline != -1:
             candidate = candidate[first_newline + 1 :]
@@ -182,6 +190,7 @@ def _parse_and_validate_patterns_json(raw_text: str) -> Dict[str, Any]:
     if not isinstance(data, dict):
         raise InvalidLLMJsonError("Patterns response must be a JSON object at the top level.")
 
+    # REF(HCDD-112): the frontend patterns page depends on this exact schema.
     required_fields = {
         "hero_summary": str,
         "short_summary": str,

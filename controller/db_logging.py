@@ -8,6 +8,7 @@ from emotion_log import EmotionLog
 load_dotenv()
 
 def get_connection():
+    # Centralize connection creation so environment/config changes happen in one place.
     return psycopg.connect(
         os.environ["DATABASE_URL"]
     )
@@ -170,6 +171,8 @@ def update_log(log_id: int, updated_log: EmotionLog) -> bool:
             ),
         )
         if cur.rowcount == 0:
+            # REF(HCDD-130): treat "no rows touched" as a failed update to avoid
+            # reporting success when log_id/user_id does not match an owned record.
             conn.rollback()
             return False
         conn.commit()

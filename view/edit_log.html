@@ -126,6 +126,8 @@ function formatDate(rawDate) {
 }
 
 function mapSleepValueToLabel(value) {
+  // REF(HCDD-309): slider uses compact numeric values while API persists labels.
+  // Keep this mapper in sync with backend expectations until a shared enum exists.
   if (String(value) === "1") return "Poor";
   if (String(value) === "3") return "Good";
   return "Average";
@@ -140,6 +142,7 @@ function mapSleepLabelToValue(label) {
 
 async function loadLog() {
   if (!currentUserId) {
+    // Client-side routing guard only; the API still must validate user ownership.
     window.location.href = "authentication.html";
     return;
   }

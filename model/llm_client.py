@@ -9,6 +9,7 @@ _client = None
 
 
 def has_api_key() -> bool:
+    # Use override=True so local .env edits are picked up without restarting.
     load_dotenv(override=True)
     return bool(os.environ.get("GOOGLE_GENERATIVE_AI_API_KEY"))
 
@@ -17,6 +18,7 @@ def get_client():
     global _client
 
     if _client is not None:
+        # Cache the SDK client to avoid rebuilding transport state per request.
         return _client
 
     load_dotenv(override=True)
@@ -32,7 +34,8 @@ def get_client():
 def llm_connect() -> bool:
     try:
         client = get_client()
-        # Minimal connectivity test
+        # Keep startup checks lightweight: validate credentials + model reachability
+        # without consuming a full feature prompt.
         response = client.models.generate_content(
             model=MODEL_NAME,
             contents="Reply with the word OK."

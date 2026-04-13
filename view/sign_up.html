@@ -145,7 +145,8 @@
  
       const apiBaseUrl = "http://127.0.0.1:5000";
 
-      // Make sure the username is not already taken
+      // Check availability first so signup failures can show a targeted message
+      // instead of a generic "create user failed" error.
       try {
         const response = await fetch(`${apiBaseUrl}/authentication/user_exists/${username}`);
         if (!response.ok) throw new Error("Could not check if username is already taken.");
@@ -160,10 +161,14 @@
       }
 
       try {
+        // TODO(HCDD-303): credentials are in URL params for legacy endpoint shape.
+        // Replace with JSON POST body when auth routes are revised.
         const response = await fetch(`${apiBaseUrl}/authentication/create_user/${username}/${password}`, {method: "POST"}); // Sends POST request to create_user endpoint
         if (!response.ok) throw new Error("Could not create a new user.");
         const data = await response.json();
         if (data.verified) {
+          // Client-side session state is only used for page routing; server-side checks
+          // remain the source of truth for user data access.
           sessionStorage.setItem("currentUserId", data.user_id) // Set the user id in the session storage
           window.location.href = "logs.html";
         } else {

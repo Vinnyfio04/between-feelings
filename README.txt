@@ -69,3 +69,30 @@ root/
 │
 ├── testharness.py
 └── tester.py
+
+## Commenting Guidelines
+Use comments to explain intent and constraints, not to narrate obvious syntax.
+
+### What to comment
+- Explain non-obvious logic, especially validation branches, fallbacks, polling, retries, and error mapping.
+- Document why a decision was made when a simpler-looking option exists.
+- Capture business context for limits and rules (for example, hard caps, required fields, and compatibility constraints).
+- Add technical debt notes when a shortcut is intentional and temporary.
+
+### What not to comment
+- Do not add comments that just restate the next line of code.
+- Do not keep commented-out old implementations as history notes.
+- Do not over-comment basic HTML structure or trivial assignments.
+
+### Traceability format
+- For requirement or bug traceability, include a short reference token in comments:
+  - `REF(HCDD-123): product/instructor requirement context`
+  - `BUG(HCDD-456): bug context and why this guard exists`
+- For debt items, use:
+  - `TODO(HCDD-789): short reason + intended follow-up`
+
+### Per-file review checklist
+- Each new comment answers at least one: intent, constraint, decision rationale, or traceability.
+- Comments are placed near the exact branch/logic they justify.
+- No duplicate comments that say the same thing in multiple places.
+- Naming stays meaningful; comments should not compensate for unclear names when an easy rename is possible in a future pass.

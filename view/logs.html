@@ -141,6 +141,8 @@
     const currentUserId = sessionStorage.getItem("currentUserId") // Get the user id from the session storage
 
     if (!currentUserId) {
+      // REF(HCDD-304): this redirect protects UX flow only. API routes must still
+      // validate ownership on every request because sessionStorage is user-editable.
       window.location.href = "authentication.html";
     }
 
@@ -166,6 +168,8 @@
       card.dataset.intensity = intensityLevel;
       card.dataset.logId = String(log.log_id);
 
+      // REF(HCDD-305): this view relies on server-provided log fields being safe for
+      // rendering. Keep server-side sanitization guarantees in place if this grows.
       card.innerHTML = `
         <div class="card-top">
           <div class="card-label-row">
@@ -206,6 +210,7 @@
     async function deleteLogCard(logId, card) {
       closeAllCardMenus();
       if (card) {
+        // Optimistic removal keeps the UI responsive; failures are reconciled by reload.
         card.remove();
         applyFilters();
       }
@@ -270,6 +275,8 @@
     }
 
     function getDateValue(dateText) {
+      // TODO(HCDD-306): sorting assumes current-year cards because card text omits year.
+      // Prefer sorting by canonical ISO date from the API payload instead of display text.
       return new Date(dateText + ", 2026").getTime();
     }
 
