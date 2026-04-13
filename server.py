@@ -39,11 +39,23 @@ def refresh_pattern(user_id: int):
         patterns_cache[user_id] = {"status": "error", "data": None, "error": str(e)}
 
 
+# Placeholder until INSERT RETURNING assigns the real id (DB-generated identity).
+NEW_LOG_PLACEHOLDER_LOG_ID = 0
+
+
+def _normalize_new_log_date(raw: str) -> str:
+    """Map client ISO datetimes to YYYY-MM-DD for PostgreSQL date columns."""
+    s = raw.strip()
+    if "T" in s:
+        return s.split("T", 1)[0]
+    return s
+
+
 def _validate_new_log_payload(payload: dict, user_id: int, require_follow_up_qa: bool):
     # Keep a single validation path for both "generate questions" and "save log"
     # so both endpoints enforce the same shape before controller/database calls.
+    # log_id is not required: new rows use DB identity; optional client log_id is ignored.
     required_keys = {
-        "log_id",
         "label",
         "description",
         "date",
@@ -61,8 +73,6 @@ def _validate_new_log_payload(payload: dict, user_id: int, require_follow_up_qa:
             "message": f"Missing required field(s): {', '.join(missing_keys)}.",
         }
 
-    if not isinstance(payload["log_id"], int):
-        return None, {"error": "bad_request", "message": "log_id must be an integer."}
     if not isinstance(payload["label"], str) or not payload["label"].strip():
         return None, {"error": "bad_request", "message": "label must be a non-empty string."}
     if not isinstance(payload["description"], str) or not payload["description"].strip():
@@ -81,14 +91,14 @@ def _validate_new_log_payload(payload: dict, user_id: int, require_follow_up_qa:
         if not isinstance(payload["follow_up_qa"], str):
             return None, {"error": "bad_request", "message": "follow_up_qa must be a string."}
         follow_up_qa = payload["follow_up_qa"].strip()
-    # TODO(HCDD-202): move log_id generation server-side once insert flow is updated.
-    # The frontend sends it today to stay compatible with existing save behavior.
+
+    date_stored = _normalize_new_log_date(payload["date"])
     log = controller.EmotionLog(
-        log_id=payload["log_id"],
+        log_id=NEW_LOG_PLACEHOLDER_LOG_ID,
         user_id=user_id,
         label=payload["label"].strip(),
         description=payload["description"].strip(),
-        date=payload["date"].strip(),
+        date=date_stored,
         trigger=payload["trigger"].strip(),
         intensity=payload["intensity"],
         sleep_quality=payload["sleep_quality"].strip(),
@@ -322,14 +332,14 @@ def create_user_log(user_id: int):
         }), 400
 
     try:
-        saved = controller.save_log(log)
-        if not saved:
+        new_log_id = controller.save_log(log)
+        if new_log_id is None:
             return jsonify({
                 "saved": False,
                 "error": "save_failed",
                 "message": "Failed to save completed log.",
             }), 400
-        return jsonify({"saved": True, "log_id": log.log_id}), 201
+        return jsonify({"saved": True, "log_id": new_log_id}), 201
     except Exception as exc:
         return jsonify({
             "error": "internal_error",

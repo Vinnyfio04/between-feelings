@@ -184,9 +184,6 @@ function renderFollowupStep() {
 
 function buildInitialPayload() {
   return {
-    // TODO(HCDD-312): replace timestamp-based client IDs with server-generated IDs
-    // once the create-log API no longer requires frontend-provided log_id.
-    log_id: Date.now(),
     label: labelInput.value.trim(),
     description: descriptionInput.value.trim(),
     date: new Date().toISOString(),

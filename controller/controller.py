@@ -6,7 +6,7 @@ import text_generation as tg
 from emotion_log import EmotionLog
 
 # Database logging
-def save_log(log):
+def save_log(log) -> Optional[int]:
     return db_log.save_log(log)
 
 def update_log(log_id, log):

@@ -1,5 +1,5 @@
 import os
-from typing import List
+from typing import List, Optional
 
 import psycopg
 from dotenv import load_dotenv
@@ -95,14 +95,14 @@ def get_log(user_id: int, log_id: int):
     )
 
 
-def save_log(log: EmotionLog) -> bool:
+def save_log(log: EmotionLog) -> Optional[int]:
+    """Insert a new log; log_id is DB-generated. Returns new log_id, or None on failure."""
     conn = get_connection()
     cur = conn.cursor()
 
     try:
         query = """
         INSERT INTO emotion_logs (
-            log_id,
             user_id,
             label,
             description,
@@ -112,13 +112,13 @@ def save_log(log: EmotionLog) -> bool:
             sleep_quality,
             follow_up_qa
         )
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+        RETURNING log_id
         """
 
         cur.execute(
             query,
             (
-                log.log_id,
                 log.user_id,
                 log.label,
                 log.description,
@@ -129,11 +129,15 @@ def save_log(log: EmotionLog) -> bool:
                 log.follow_up_qa,
             ),
         )
+        row = cur.fetchone()
+        if row is None:
+            conn.rollback()
+            return None
         conn.commit()
-        return True
+        return int(row[0])
     except Exception:
         conn.rollback()
-        return False
+        return None
     finally:
         cur.close()
         conn.close()
