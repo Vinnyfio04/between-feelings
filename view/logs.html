@@ -212,7 +212,7 @@
       if (card) {
         // Optimistic removal keeps the UI responsive; failures are reconciled by reload.
         card.remove();
-        applyFilters();
+        sortCards();
       }
       try {
         const response = await fetch(`${apiBaseUrl}/logs/${currentUserId}/${logId}`, {

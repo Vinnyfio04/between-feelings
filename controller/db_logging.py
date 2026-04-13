@@ -23,6 +23,7 @@ def get_logs(user_id: int) -> List[EmotionLog]:
     query = """
     SELECT * FROM emotion_logs
     WHERE user_id = %s
+    ORDER BY date DESC, log_id DESC
     """
 
     cur.execute(query, (user_id,))
