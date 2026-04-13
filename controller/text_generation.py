@@ -58,7 +58,7 @@ def generate_patterns_summary(
         logs = log_repository.get_logs(user_id)
 
     if not logs:
-        # REF(HCDD-110): pattern summaries require historical context; generating
+        # pattern summaries require historical context; generating
         # from zero logs produces confident-looking but misleading guidance.
         raise NoLogsAvailableError("At least one log is required to generate a pattern summary.")
 
@@ -136,7 +136,7 @@ def _parse_and_validate_followup_questions(raw_text: str) -> List[str]:
         raise InvalidFollowupQuestionsError("Follow-up questions response must be a list.")
 
     if len(parsed) != 3:
-        # REF(HCDD-111): new-log UI currently renders exactly three follow-up slots.
+        # new-log UI currently renders exactly three follow-up slots.
         # Enforcing this here avoids UI/backend drift.
         raise InvalidFollowupQuestionsError("Follow-up questions response must contain exactly 3 items.")
 
@@ -190,7 +190,7 @@ def _parse_and_validate_patterns_json(raw_text: str) -> Dict[str, Any]:
     if not isinstance(data, dict):
         raise InvalidLLMJsonError("Patterns response must be a JSON object at the top level.")
 
-    # REF(HCDD-112): the frontend patterns page depends on this exact schema.
+    # the frontend patterns page depends on this exact schema.
     required_fields = {
         "hero_summary": str,
         "short_summary": str,

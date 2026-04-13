@@ -118,7 +118,7 @@
         if (!response.ok) throw new Error("Could not verify password.");
         const data = await response.json();
         if (data.verified) {
-          // REF(HCDD-302): this is a client UX gate only; backend endpoints must still
+          // this is a client UX gate only; backend endpoints must still
           // enforce user authorization and never trust sessionStorage alone.
           sessionStorage.setItem("currentUserId", data.user_id) // Set the user id in the session storage
           window.location.href = "logs.html";

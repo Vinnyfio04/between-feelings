@@ -126,7 +126,7 @@ function formatDate(rawDate) {
 }
 
 function mapSleepValueToLabel(value) {
-  // REF(HCDD-309): slider uses compact numeric values while API persists labels.
+  // slider uses compact numeric values while API persists labels.
   // Keep this mapper in sync with backend expectations until a shared enum exists.
   if (String(value) === "1") return "Poor";
   if (String(value) === "3") return "Good";

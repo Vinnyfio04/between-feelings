@@ -27,7 +27,7 @@ from text_generation import (  # noqa: E402
 app = Flask(__name__)
 CORS(app) # Enable CORS for the app, prevent browser from blocking requests from different origins
 
-# REF(HCDD-101): patterns generation is long-running, so the UI polls this cache
+# patterns generation is long-running, so the UI polls this cache
 # and treats "loading" as a normal state instead of an error.
 patterns_cache = {}
 def refresh_pattern(user_id: int):
@@ -323,7 +323,7 @@ def create_user_log(user_id: int):
     if validation_error is not None:
         return jsonify(validation_error), 400
 
-    # TODO(HCDD-203): strengthen completion validation once frontend and backend
+    # strengthen completion validation once frontend and backend
     # agree on a stable follow_up_qa serialization format.
     if not log.follow_up_qa.strip():
         return jsonify({

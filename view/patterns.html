@@ -98,7 +98,7 @@ const apiBaseUrl = "http://127.0.0.1:5000"; // Base URL for the API (local for n
 const currentUserId = sessionStorage.getItem("currentUserId") // Get the user id from the session storage
 
 if (!currentUserId) {
-  // REF(HCDD-307): client redirect keeps navigation coherent; authorization still belongs
+  // client redirect keeps navigation coherent; authorization still belongs
   // to backend routes because browser storage can be modified by users.
   window.location.href = "authentication.html";
 } else {
@@ -170,7 +170,7 @@ if (!currentUserId) {
       console.log(data);
 
       if (response.status === 202) {
-        // REF(HCDD-308): `/patterns` is asynchronous. 202 means generation is in progress,
+        // `/patterns` is asynchronous. 202 means generation is in progress,
         // so polling is expected behavior rather than a failure path.
         patternsStatus.textContent = "Generating pattern...";
         setTimeout(loadPatterns, 1500);
