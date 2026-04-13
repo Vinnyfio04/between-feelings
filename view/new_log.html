@@ -72,7 +72,7 @@
 
       <div class="bottom-area">
         <button class="main-btn" id="nextBtn">Next</button>
-        <p class="step-text">1 / 3</p>
+        <p class="step-text" id="stepText">1 / 4</p>
       </div>
     </section>
 
@@ -82,7 +82,7 @@
       <h2>Let’s ask some quick follow-ups.</h2>
 
       <div class="question-box">
-        <p class="question-title">Q1:</p>
+        <p class="question-title" id="questionTitle">Q1:</p>
         <p class="question-text" id="questionText"></p>
       </div>
 
@@ -115,7 +115,34 @@ backdrop.onclick = () => {
 
 const page1 = document.getElementById("page1");
 const page2 = document.getElementById("page2");
+const descriptionInput = document.getElementById("descriptionInput");
+const labelInput = document.getElementById("labelInput");
+const triggerInput = document.getElementById("triggerInput");
+const intensityInput = document.getElementById("intensityInput");
 const sleepInput = document.getElementById("sleepInput");
+const nextBtn = document.getElementById("nextBtn");
+const backBtn = document.getElementById("backBtn");
+const followupNextBtn = document.getElementById("followupNextBtn");
+const stepText = document.getElementById("stepText");
+const questionTitle = document.getElementById("questionTitle");
+const questionText = document.getElementById("questionText");
+const followupResponseInput = document.getElementById("followupResponseInput");
+const apiBaseUrl = "http://127.0.0.1:5000";
+const currentUserId = sessionStorage.getItem("currentUserId");
+
+const state = {
+  initialLogPayload: null,
+  questions: [],
+  answers: [],
+  currentQuestionIndex: 0
+};
+
+let isGeneratingFollowups = false;
+let isSubmittingFinalLog = false;
+
+if (!currentUserId) {
+  window.location.href = "authentication.html";
+}
 
 // Contract for later backend wiring: slider values map to stored labels.
 function mapSleepValueToLabel(value) {
@@ -129,15 +156,169 @@ sleepInput.addEventListener("input", () => {
   sleepInput.dataset.sleepLabel = mapSleepValueToLabel(sleepInput.value);
 });
 
-document.getElementById("nextBtn").onclick = () => {
-  page1.classList.remove("active");
-  page2.classList.add("active");
-};
+function setPage1Loading(isLoading) {
+  nextBtn.disabled = isLoading;
+  nextBtn.textContent = isLoading ? "Loading..." : "Next";
+}
 
-document.getElementById("backBtn").onclick = () => {
+function setPage2Loading(isLoading) {
+  backBtn.disabled = isLoading;
+  followupNextBtn.disabled = isLoading;
+  if (isLoading) {
+    followupNextBtn.textContent = "Submitting...";
+    return;
+  }
+  followupNextBtn.textContent = state.currentQuestionIndex === 2 ? "Submit" : "Next";
+}
+
+function renderFollowupStep() {
+  const index = state.currentQuestionIndex;
+  questionTitle.textContent = `Q${index + 1}:`;
+  questionText.textContent = state.questions[index] || "";
+  followupResponseInput.value = state.answers[index] || "";
+  followupNextBtn.textContent = index === 2 ? "Submit" : "Next";
+  stepText.textContent = `${index + 2} / 4`;
+}
+
+function buildInitialPayload() {
+  return {
+    log_id: Date.now(),
+    label: labelInput.value.trim(),
+    description: descriptionInput.value.trim(),
+    date: new Date().toISOString(),
+    trigger: triggerInput.value.trim(),
+    intensity: Number(intensityInput.value),
+    sleep_quality: mapSleepValueToLabel(sleepInput.value)
+  };
+}
+
+function buildFollowUpQaString() {
+  return [
+    `Q1: ${state.questions[0] || ""}`,
+    `A1: ${state.answers[0] || ""}`,
+    "",
+    `Q2: ${state.questions[1] || ""}`,
+    `A2: ${state.answers[1] || ""}`,
+    "",
+    `Q3: ${state.questions[2] || ""}`,
+    `A3: ${state.answers[2] || ""}`
+  ].join("\n");
+}
+
+async function handleInitialNext() {
+  if (isGeneratingFollowups || isSubmittingFinalLog) return;
+
+  const description = descriptionInput.value.trim();
+  const label = labelInput.value.trim();
+  const trigger = triggerInput.value.trim();
+  if (!description || !label || !trigger) {
+    alert("Please complete description, feeling label, and trigger before continuing.");
+    return;
+  }
+
+  const initialPayload = buildInitialPayload();
+
+  isGeneratingFollowups = true;
+  setPage1Loading(true);
+  try {
+    const response = await fetch(`${apiBaseUrl}/logs/${encodeURIComponent(currentUserId)}/followup-questions`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(initialPayload)
+    });
+    if (!response.ok) {
+      throw new Error("Could not generate follow-up questions.");
+    }
+    const data = await response.json();
+    const questions = Array.isArray(data.questions) ? data.questions : [];
+    if (questions.length !== 3 || questions.some((q) => typeof q !== "string" || !q.trim())) {
+      throw new Error("Follow-up questions were not returned in the expected format.");
+    }
+
+    state.initialLogPayload = initialPayload;
+    state.questions = questions;
+    state.answers = ["", "", ""];
+    state.currentQuestionIndex = 0;
+
+    renderFollowupStep();
+    page1.classList.remove("active");
+    page2.classList.add("active");
+  } catch (error) {
+    console.error(error);
+    alert("Unable to generate follow-up questions right now. Please try again.");
+  } finally {
+    isGeneratingFollowups = false;
+    setPage1Loading(false);
+  }
+}
+
+async function submitFinalLog() {
+  if (!state.initialLogPayload) {
+    alert("Missing initial log details. Please start again from page 1.");
+    page2.classList.remove("active");
+    page1.classList.add("active");
+    return;
+  }
+
+  isSubmittingFinalLog = true;
+  setPage2Loading(true);
+  try {
+    const payload = {
+      ...state.initialLogPayload,
+      follow_up_qa: buildFollowUpQaString()
+    };
+    const response = await fetch(`${apiBaseUrl}/logs/${encodeURIComponent(currentUserId)}`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(payload)
+    });
+    if (!response.ok) {
+      throw new Error("Could not save log.");
+    }
+    alert("Log saved successfully.");
+    window.location.href = "logs.html";
+  } catch (error) {
+    console.error(error);
+    alert("Unable to save this log right now. Please try again.");
+  } finally {
+    isSubmittingFinalLog = false;
+    setPage2Loading(false);
+  }
+}
+
+async function handleFollowupNext() {
+  if (isSubmittingFinalLog || isGeneratingFollowups) return;
+
+  state.answers[state.currentQuestionIndex] = followupResponseInput.value.trim();
+  if (state.currentQuestionIndex < 2) {
+    state.currentQuestionIndex += 1;
+    renderFollowupStep();
+    return;
+  }
+  await submitFinalLog();
+}
+
+function handleFollowupBack() {
+  if (isSubmittingFinalLog || isGeneratingFollowups) return;
+
+  state.answers[state.currentQuestionIndex] = followupResponseInput.value.trim();
+  if (state.currentQuestionIndex > 0) {
+    state.currentQuestionIndex -= 1;
+    renderFollowupStep();
+    return;
+  }
   page2.classList.remove("active");
   page1.classList.add("active");
-};
+  stepText.textContent = "1 / 4";
+}
+
+nextBtn.addEventListener("click", handleInitialNext);
+followupNextBtn.addEventListener("click", handleFollowupNext);
+backBtn.addEventListener("click", handleFollowupBack);
 </script>
 
 </body>
