@@ -1,3 +1,4 @@
+import ast
 import json
 from typing import Any, Dict, List, Optional
 
@@ -21,6 +22,10 @@ class InvalidLLMJsonError(ValueError):
 
 class LLMResponseError(ValueError):
     """Raised when the model response is unusable for summary generation."""
+
+
+class InvalidFollowupQuestionsError(ValueError):
+    """Raised when follow-up questions output is malformed or invalid."""
 
 
 def generate_chat_text(
@@ -95,11 +100,50 @@ def generate_patterns_summary(
     return _parse_and_validate_patterns_json(raw_text)
 
 
-def generate_followup_questions(log: EmotionLog) -> str:
+def generate_followup_questions(log: EmotionLog) -> List[str]:
     """Generate follow-up questions for a single emotion log."""
     prompt = build_followup_questions_prompt(log=log)
 
-    return generate_text(prompt)
+    raw_text = generate_text(prompt)
+    return _parse_and_validate_followup_questions(raw_text)
+
+
+def _parse_and_validate_followup_questions(raw_text: str) -> List[str]:
+    if not raw_text or not raw_text.strip():
+        raise InvalidFollowupQuestionsError("Follow-up questions response is empty.")
+
+    candidate = raw_text.strip()
+    if candidate.startswith("```"):
+        first_newline = candidate.find("\n")
+        if first_newline != -1:
+            candidate = candidate[first_newline + 1 :]
+        if candidate.endswith("```"):
+            candidate = candidate[:-3]
+        candidate = candidate.strip()
+
+    try:
+        parsed = ast.literal_eval(candidate)
+    except (SyntaxError, ValueError) as exc:
+        raise InvalidFollowupQuestionsError(
+            "Follow-up questions response must be a Python list literal of strings."
+        ) from exc
+
+    if not isinstance(parsed, list):
+        raise InvalidFollowupQuestionsError("Follow-up questions response must be a list.")
+
+    if len(parsed) != 3:
+        raise InvalidFollowupQuestionsError("Follow-up questions response must contain exactly 3 items.")
+
+    cleaned_questions: List[str] = []
+    for item in parsed:
+        if not isinstance(item, str):
+            raise InvalidFollowupQuestionsError("Each follow-up question must be a string.")
+        cleaned_item = item.strip()
+        if not cleaned_item:
+            raise InvalidFollowupQuestionsError("Follow-up questions must be non-empty strings.")
+        cleaned_questions.append(cleaned_item)
+
+    return cleaned_questions
 
 
 def _parse_and_validate_patterns_json(raw_text: str) -> Dict[str, Any]:

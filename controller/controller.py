@@ -45,5 +45,5 @@ def generate_patterns_summary(
 ) -> Dict[str, Any]:
     return tg.generate_patterns_summary(logs=logs, user_id=user_id)
 
-def generate_followup_questions(log: EmotionLog) -> str:
+def generate_followup_questions(log: EmotionLog) -> List[str]:
     return tg.generate_followup_questions(log)

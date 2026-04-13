@@ -41,17 +41,17 @@
       <h2>New Log</h2>
 
       <label>Talk about your experience.</label>
-      <textarea placeholder="Type here..."></textarea>
+      <textarea id="descriptionInput" placeholder="Type here..."></textarea>
 
       <label>How would you describe how it made you feel?</label>
-      <input type="text" placeholder="e.g. excited, angry, stressed..." />
+      <input id="labelInput" type="text" placeholder="e.g. excited, angry, stressed..." />
 
       <label>What do you think caused that feeling?</label>
-      <input type="text" placeholder="e.g. schoolwork, criticism..." />
+      <input id="triggerInput" type="text" placeholder="e.g. schoolwork, criticism..." />
 
       <label>Intensity</label>
       <div class="slider-wrap">
-        <input type="range" min="1" max="5" value="3" />
+        <input id="intensityInput" type="range" min="1" max="5" value="3" />
         <div class="range-marks">
           <span></span><span></span><span></span><span></span><span></span>
         </div>
@@ -62,7 +62,7 @@
 
       <label>Sleep Quality</label>
       <div class="slider-wrap">
-        <input type="range" min="1" max="3" value="2" />
+        <input id="sleepInput" type="range" min="1" max="3" value="2" />
         <div class="range-labels three-text">
           <span>Poor</span>
           <span>Average</span>
@@ -83,14 +83,14 @@
 
       <div class="question-box">
         <p class="question-title">Q1:</p>
-        <p class="question-text"></p>
+        <p class="question-text" id="questionText"></p>
       </div>
 
-      <textarea placeholder="Type your response here..."></textarea>
+      <textarea id="followupResponseInput" placeholder="Type your response here..."></textarea>
 
       <div class="followup-actions">
         <button class="sub-btn" id="backBtn">Back</button>
-        <button class="main-btn small">Next</button>
+        <button class="main-btn small" id="followupNextBtn">Next</button>
       </div>
     </section>
 
@@ -115,6 +115,19 @@ backdrop.onclick = () => {
 
 const page1 = document.getElementById("page1");
 const page2 = document.getElementById("page2");
+const sleepInput = document.getElementById("sleepInput");
+
+// Contract for later backend wiring: slider values map to stored labels.
+function mapSleepValueToLabel(value) {
+  if (String(value) === "1") return "Poor";
+  if (String(value) === "3") return "Good";
+  return "Average";
+}
+
+sleepInput.dataset.sleepLabel = mapSleepValueToLabel(sleepInput.value);
+sleepInput.addEventListener("input", () => {
+  sleepInput.dataset.sleepLabel = mapSleepValueToLabel(sleepInput.value);
+});
 
 document.getElementById("nextBtn").onclick = () => {
   page1.classList.remove("active");

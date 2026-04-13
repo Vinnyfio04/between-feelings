@@ -109,10 +109,12 @@ Constraints:
 - Do **not** suggest answers or imply conclusions
 - Keep questions **simple, neutral, non-judgmental, and non-leading**
 - Use softened language when appropriate
+- Return exactly 3 questions
 
 Output format:
 
-- Only the questions as a Python list of strings
+- Only a Python list of exactly 3 non-empty strings
+- No additional text, explanation, or markdown wrappers
 
 Here is the user emotion log:  
 """
