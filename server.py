@@ -19,6 +19,7 @@ from text_generation import (  # noqa: E402
     NoLogsAvailableError,
     InvalidLLMJsonError,
     LLMResponseError,
+    InvalidFollowupQuestionsError,
 )
 
 
@@ -35,6 +36,61 @@ def refresh_pattern(user_id: int):
         patterns_cache[user_id] = {"status": "success", "data": data, "error": None}
     except Exception as e:
         patterns_cache[user_id] = {"status": "error", "data": None, "error": str(e)}
+
+
+def _validate_new_log_payload(payload: dict, user_id: int, require_follow_up_qa: bool):
+    required_keys = {
+        "log_id",
+        "label",
+        "description",
+        "date",
+        "trigger",
+        "intensity",
+        "sleep_quality",
+    }
+    if require_follow_up_qa:
+        required_keys.add("follow_up_qa")
+
+    missing_keys = sorted([key for key in required_keys if key not in payload])
+    if missing_keys:
+        return None, {
+            "error": "bad_request",
+            "message": f"Missing required field(s): {', '.join(missing_keys)}.",
+        }
+
+    if not isinstance(payload["log_id"], int):
+        return None, {"error": "bad_request", "message": "log_id must be an integer."}
+    if not isinstance(payload["label"], str) or not payload["label"].strip():
+        return None, {"error": "bad_request", "message": "label must be a non-empty string."}
+    if not isinstance(payload["description"], str) or not payload["description"].strip():
+        return None, {"error": "bad_request", "message": "description must be a non-empty string."}
+    if not isinstance(payload["date"], str) or not payload["date"].strip():
+        return None, {"error": "bad_request", "message": "date must be a non-empty string."}
+    if not isinstance(payload["trigger"], str) or not payload["trigger"].strip():
+        return None, {"error": "bad_request", "message": "trigger must be a non-empty string."}
+    if not isinstance(payload["intensity"], int):
+        return None, {"error": "bad_request", "message": "intensity must be an integer."}
+    if not isinstance(payload["sleep_quality"], str) or not payload["sleep_quality"].strip():
+        return None, {"error": "bad_request", "message": "sleep_quality must be a non-empty string."}
+
+    follow_up_qa = ""
+    if require_follow_up_qa:
+        if not isinstance(payload["follow_up_qa"], str):
+            return None, {"error": "bad_request", "message": "follow_up_qa must be a string."}
+        follow_up_qa = payload["follow_up_qa"].strip()
+    # TEMP WORKAROUND: log_id is frontend-provided because current save path requires it.
+    log = controller.EmotionLog(
+        log_id=payload["log_id"],
+        user_id=user_id,
+        label=payload["label"].strip(),
+        description=payload["description"].strip(),
+        date=payload["date"].strip(),
+        trigger=payload["trigger"].strip(),
+        intensity=payload["intensity"],
+        sleep_quality=payload["sleep_quality"].strip(),
+        follow_up_qa=follow_up_qa,
+    )
+    return log, None
 
 
 @app.get("/logs/<int:user_id>") # Define a route for the get_user_logs function
@@ -192,6 +248,83 @@ def delete_user_log(user_id: int, log_id: int):
         return jsonify({"deleted": False}), 404
     threading.Thread(target=refresh_pattern, args=(user_id,), daemon=True).start() # Refresh the pattern cache when a log is deleted
     return jsonify({"deleted": True})
+
+
+@app.post("/logs/<int:user_id>/followup-questions")
+def generate_new_log_followup_questions(user_id: int):
+    if user_id <= 0:
+        return jsonify({
+            "error": "invalid_user_id",
+            "message": "user_id must be a positive integer",
+        }), 400
+
+    payload = request.get_json(silent=True)
+    if not isinstance(payload, dict):
+        return jsonify({
+            "error": "bad_request",
+            "message": "Expected JSON object for new log payload.",
+        }), 400
+
+    log, validation_error = _validate_new_log_payload(payload, user_id, require_follow_up_qa=False)
+    if validation_error is not None:
+        return jsonify(validation_error), 400
+
+    try:
+        questions = controller.generate_followup_questions(log)
+        return jsonify({"questions": questions}), 200
+    except (InvalidFollowupQuestionsError, ValueError) as exc:
+        return jsonify({
+            "error": "followup_generation_failed",
+            "message": f"Follow-up question generation failed: {str(exc)}",
+        }), 502
+    except Exception as exc:
+        return jsonify({
+            "error": "internal_error",
+            "message": f"Unexpected internal error: {str(exc)}",
+        }), 500
+
+
+@app.post("/logs/<int:user_id>")
+def create_user_log(user_id: int):
+    if user_id <= 0:
+        return jsonify({
+            "error": "invalid_user_id",
+            "message": "user_id must be a positive integer",
+        }), 400
+
+    payload = request.get_json(silent=True)
+    if not isinstance(payload, dict):
+        return jsonify({
+            "error": "bad_request",
+            "message": "Expected JSON object for completed new log payload.",
+        }), 400
+
+    log, validation_error = _validate_new_log_payload(payload, user_id, require_follow_up_qa=True)
+    if validation_error is not None:
+        return jsonify(validation_error), 400
+
+    # Minimal validation for now: stronger completion checks depend on a finalized
+    # frontend follow_up_qa string format contract.
+    if not log.follow_up_qa.strip():
+        return jsonify({
+            "error": "bad_request",
+            "message": "follow_up_qa must be a non-empty string.",
+        }), 400
+
+    try:
+        saved = controller.save_log(log)
+        if not saved:
+            return jsonify({
+                "saved": False,
+                "error": "save_failed",
+                "message": "Failed to save completed log.",
+            }), 400
+        return jsonify({"saved": True, "log_id": log.log_id}), 201
+    except Exception as exc:
+        return jsonify({
+            "error": "internal_error",
+            "message": f"Unexpected internal error: {str(exc)}",
+        }), 500
 
 @app.get("/authentication/user_exists/<string:username>")
 def user_exists(username: str):
