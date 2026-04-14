@@ -1,17 +1,5 @@
-import os # system module
-import psycopg # database connector
 import emotion_log #dataclass
-from dotenv import load_dotenv
-
-# get DATABASE_URL variable from the .env file
-load_dotenv()
-DATABASE_URL = os.getenv("DATABASE_URL")
-
-# Connect to the database using psycopg for future conn variables (reusing code)
-def get_connection():
-    return psycopg.connect(
-        os.environ["DATABASE_URL"]
-    )
+from database_connection import get_connection
 
 
 # Methods to check user input

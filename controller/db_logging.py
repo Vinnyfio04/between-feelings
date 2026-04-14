@@ -1,19 +1,7 @@
-import os
 from typing import List, Optional
 
-import psycopg
-from dotenv import load_dotenv
 from emotion_log import EmotionLog
-
-load_dotenv()
-
-def get_connection():
-    # Centralize connection creation so environment/config changes happen in one place.
-    return psycopg.connect(
-        os.environ["DATABASE_URL"]
-    )
-
-
+from database_connection import get_connection
 
 def get_logs(user_id: int) -> List[EmotionLog]:
     conn = get_connection() 
