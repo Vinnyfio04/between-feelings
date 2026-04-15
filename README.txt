@@ -86,7 +86,7 @@ Use comments to explain intent and constraints, not to narrate obvious syntax.
 
 ### Traceability format
 - For requirement or bug traceability, include a short reference token in comments:
-  - `REF(HCDD-123): product/instructor requirement context`
+  - `product/instructor requirement context`
   - `BUG(HCDD-456): bug context and why this guard exists`
 - For debt items, use:
   - `TODO(HCDD-789): short reason + intended follow-up`

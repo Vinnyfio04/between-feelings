@@ -1,19 +1,7 @@
-import os
 from typing import List, Optional
 
-import psycopg
-from dotenv import load_dotenv
 from emotion_log import EmotionLog
-
-load_dotenv()
-
-def get_connection():
-    # Centralize connection creation so environment/config changes happen in one place.
-    return psycopg.connect(
-        os.environ["DATABASE_URL"]
-    )
-
-
+from database_connection import get_connection
 
 def get_logs(user_id: int) -> List[EmotionLog]:
     conn = get_connection() 
@@ -23,6 +11,7 @@ def get_logs(user_id: int) -> List[EmotionLog]:
     query = """
     SELECT * FROM emotion_logs
     WHERE user_id = %s
+    ORDER BY date DESC, log_id DESC
     """
 
     cur.execute(query, (user_id,))
@@ -175,7 +164,7 @@ def update_log(log_id: int, updated_log: EmotionLog) -> bool:
             ),
         )
         if cur.rowcount == 0:
-            # REF(HCDD-130): treat "no rows touched" as a failed update to avoid
+            # treat "no rows touched" as a failed update to avoid
             # reporting success when log_id/user_id does not match an owned record.
             conn.rollback()
             return False

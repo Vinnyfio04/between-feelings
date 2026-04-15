@@ -85,7 +85,7 @@ const apiBaseUrl = "http://127.0.0.1:5000";
 const currentUserId = sessionStorage.getItem("currentUserId");
 
 if (!currentUserId) {
-  // REF(HCDD-310): this prevents unauthenticated navigation in the UI, but backend
+  // this prevents unauthenticated navigation in the UI, but backend
   // validation is still required because sessionStorage cannot be trusted.
   window.location.href = "authentication.html";
 } else {

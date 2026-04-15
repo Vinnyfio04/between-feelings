@@ -1,6 +1,5 @@
 from pathlib import Path
-import json
-import time
+import logging
 import sys
 import threading
 
@@ -16,18 +15,15 @@ if str(CONTROLLER_DIR) not in sys.path: # If the controller directory is not in 
 
 import controller  # noqa: E402 # Import the controller module in order to gain access to get_logs function
 from text_generation import (  # noqa: E402
-    NoLogsAvailableError,
-    InvalidLLMJsonError,
-    LLMResponseError,
     InvalidFollowupQuestionsError,
 )
 
-
+logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
 CORS(app) # Enable CORS for the app, prevent browser from blocking requests from different origins
 
-# REF(HCDD-101): patterns generation is long-running, so the UI polls this cache
+# patterns generation is long-running, so the UI polls this cache
 # and treats "loading" as a normal state instead of an error.
 patterns_cache = {}
 def refresh_pattern(user_id: int):
@@ -154,105 +150,27 @@ def get_patterns_summary(user_id: int):
     try:
         result = patterns_cache.get(user_id)
 
-
         if result is None:
             # First request kicks off background generation. Returning 202 lets the
             # frontend distinguish "still processing" from real failures.
             threading.Thread(target=refresh_pattern, args=(user_id,), daemon=True).start()
             return jsonify({"status": "loading"}), 202
-       
+
         if result["status"] == "loading":
             return jsonify({"status": "loading"}), 202
 
-
         if result["status"] == "success":
             return jsonify(result["data"]), 200
-
 
         if result["status"] == "error":
             # Upstream model/parse issues are surfaced as 502 to indicate
             # dependency failure rather than malformed client input.
             return jsonify({"status": "error", "message": result.get("error", "Pattern generation failed.")}), 502
-        # region agent log
-        try:
-            with open("/Users/jacoblee/Desktop/3.2/hcdd412/between-feelings/.cursor/debug-71f2c0.log", "a", encoding="utf-8") as _f:
-                _f.write(json.dumps({
-                    "sessionId": "71f2c0",
-                    "runId": "post-fix",
-                    "hypothesisId": "H6",
-                    "location": "server.py:get_patterns_summary",
-                    "message": "patterns route success",
-                    "data": {"user_id": user_id},
-                    "timestamp": int(time.time() * 1000),
-                }) + "\n")
-        except Exception:
-            pass
-        # endregion
+
+        # Preserve existing fallback for unknown cache states.
         return jsonify(result)
-    except NoLogsAvailableError:
-        return jsonify({
-            "error": "no_logs_available",
-            "message": "No logs available for this user",
-        }), 404
-    except InvalidLLMJsonError as exc:
-        # region agent log
-        print(f"[DEBUG InvalidLLMJsonError] {exc}")
-        try:
-            with open("/Users/jacoblee/Desktop/3.2/hcdd412/between-feelings/.cursor/debug-71f2c0.log", "a", encoding="utf-8") as _f:
-                _f.write(json.dumps({
-                    "sessionId": "71f2c0",
-                    "runId": "post-fix",
-                    "hypothesisId": "H6",
-                    "location": "server.py:get_patterns_summary",
-                    "message": "patterns route invalid_llm_json",
-                    "data": {"user_id": user_id, "error": str(exc)},
-                    "timestamp": int(time.time() * 1000),
-                }) + "\n")
-        except Exception:
-            pass
-        # endregion
-        return jsonify({
-            "error": "invalid_llm_json",
-            "message": f"Model returned malformed or schema-invalid JSON: {str(exc)}",
-        }), 502
-    except LLMResponseError as exc:
-        # region agent log
-        print(f"[DEBUG LLMResponseError] {exc}")
-        try:
-            with open("/Users/jacoblee/Desktop/3.2/hcdd412/between-feelings/.cursor/debug-71f2c0.log", "a", encoding="utf-8") as _f:
-                _f.write(json.dumps({
-                    "sessionId": "71f2c0",
-                    "runId": "post-fix",
-                    "hypothesisId": "H6",
-                    "location": "server.py:get_patterns_summary",
-                    "message": "patterns route llm_failure",
-                    "data": {"user_id": user_id, "error": str(exc)},
-                    "timestamp": int(time.time() * 1000),
-                }) + "\n")
-        except Exception:
-            pass
-        # endregion
-        return jsonify({
-            "error": "llm_failure",
-            "message": f"Pattern summary generation failed: {str(exc)}",
-        }), 502
     except Exception as exc:
-        # region agent log
-        print(f"[DEBUG Exception] {exc}")
-        try:
-            with open("/Users/jacoblee/Desktop/3.2/hcdd412/between-feelings/.cursor/debug-71f2c0.log", "a", encoding="utf-8") as _f:
-                _f.write(json.dumps({
-                    "sessionId": "71f2c0",
-                    "runId": "post-fix",
-                    "hypothesisId": "H6",
-                    "location": "server.py:get_patterns_summary",
-                    "message": "patterns route internal_error",
-                    "data": {"user_id": user_id, "error": str(exc)},
-                    "timestamp": int(time.time() * 1000),
-                }) + "\n")
-        except Exception:
-            pass
-        # endregion
+        logger.exception("Unhandled error in get_patterns_summary")
         return jsonify({
             "error": "internal_error",
             "message": f"Unexpected internal error: {str(exc)}",
@@ -323,7 +241,7 @@ def create_user_log(user_id: int):
     if validation_error is not None:
         return jsonify(validation_error), 400
 
-    # TODO(HCDD-203): strengthen completion validation once frontend and backend
+    # strengthen completion validation once frontend and backend
     # agree on a stable follow_up_qa serialization format.
     if not log.follow_up_qa.strip():
         return jsonify({

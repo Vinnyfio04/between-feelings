@@ -34,15 +34,15 @@
 
   <!-- Main -->
   <main class="patterns-page">
-    <p id="patternsStatus" class="section-label" aria-live="polite" style="font-size: 1rem;"></p>
+    <p id="patternsStatus" class="section-label" aria-live="polite" style="font-size: 1.5rem; text-align: center; margin: 2.5rem 0;"></p>
 
-    <section class="hero-card">
+    <section class="hero-card patterns-content hidden">
       <p class="section-label">WEEKLY REFLECTION</p>
       <h2>Your emotional patterns</h2>
       <p id="heroSummary"></p>
     </section>
 
-    <section class="summary-card">
+    <section class="summary-card patterns-content hidden">
       <div class="summary-header">
         <h3>Short Summary</h3>
         <span class="badge">
@@ -53,12 +53,12 @@
       <div class="summary-box" id="shortSummary"></div>
     </section>
 
-    <section class="insight-card">
+    <section class="insight-card patterns-content hidden">
       <h3>Quick Insights</h3>
       <div id="quickInsights"></div>
     </section>
 
-    <section class="dropdown-card">
+    <section class="dropdown-card patterns-content hidden">
       <button id="toggleBtn" class="dropdown-btn" type="button">
         View Detailed Summary ▼
       </button>
@@ -98,7 +98,7 @@ const apiBaseUrl = "http://127.0.0.1:5000"; // Base URL for the API (local for n
 const currentUserId = sessionStorage.getItem("currentUserId") // Get the user id from the session storage
 
 if (!currentUserId) {
-  // REF(HCDD-307): client redirect keeps navigation coherent; authorization still belongs
+  // client redirect keeps navigation coherent; authorization still belongs
   // to backend routes because browser storage can be modified by users.
   window.location.href = "authentication.html";
 } else {
@@ -107,6 +107,7 @@ if (!currentUserId) {
   const shortSummary = document.getElementById("shortSummary");
   const quickInsights = document.getElementById("quickInsights");
   const detailedSummary = document.getElementById("detailedSummary");
+  const patternSections = document.querySelectorAll(".patterns-content");
 
   function isBlank(value) {
     return !value || !String(value).trim();
@@ -124,11 +125,13 @@ if (!currentUserId) {
   }
 
   function renderError() {
+    patternSections.forEach((section) => section.classList.add("hidden"));
     patternsStatus.textContent = "Unable to load patterns right now.";
     setFallbackContent();
   }
 
   function renderEmpty() {
+    patternSections.forEach((section) => section.classList.add("hidden"));
     patternsStatus.textContent = "Not enough data yet to generate patterns.";
     setFallbackContent();
   }
@@ -146,6 +149,7 @@ if (!currentUserId) {
       return;
     }
 
+    patternSections.forEach((section) => section.classList.remove("hidden"));
     heroSummary.textContent = hero.trim();
     shortSummary.textContent = short.trim();
     detailedSummary.textContent = detailed.trim();
@@ -170,9 +174,10 @@ if (!currentUserId) {
       console.log(data);
 
       if (response.status === 202) {
-        // REF(HCDD-308): `/patterns` is asynchronous. 202 means generation is in progress,
+        // `/patterns` is asynchronous. 202 means generation is in progress,
         // so polling is expected behavior rather than a failure path.
-        patternsStatus.textContent = "Generating pattern...";
+        patternSections.forEach((section) => section.classList.add("hidden"));
+        patternsStatus.textContent = "Generating pattern summary...";
         setTimeout(loadPatterns, 1500);
         return;
       }
@@ -183,7 +188,9 @@ if (!currentUserId) {
       }
 
       if (response.status === 502) {
-        patternsStatus.textContent = data.message || "Pattern generation failed.";
+        patternsStatus.textContent = "Pattern generation failed. Please try again later.";
+        console.error(data.message)
+        
         setFallbackContent();
         return;
       }

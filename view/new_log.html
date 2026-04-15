@@ -141,7 +141,7 @@ let isGeneratingFollowups = false;
 let isSubmittingFinalLog = false;
 
 if (!currentUserId) {
-  // REF(HCDD-311): this client redirect keeps navigation coherent, but server-side
+  // this client redirect keeps navigation coherent, but server-side
   // ownership checks are still required because sessionStorage is user-editable.
   window.location.href = "authentication.html";
 }
@@ -194,7 +194,7 @@ function buildInitialPayload() {
 }
 
 function buildFollowUpQaString() {
-  // REF(HCDD-313): backend currently persists follow-up data as a single formatted
+  // backend currently persists follow-up data as a single formatted
   // string; preserve this layout until both layers migrate to structured JSON.
   return [
     `Q1: ${state.questions[0] || ""}`,
@@ -238,7 +238,7 @@ async function handleInitialNext() {
     }
     const data = await response.json();
     const questions = Array.isArray(data.questions) ? data.questions : [];
-    // REF(HCDD-314): UI flow has three follow-up pages, so this guard fails fast
+    // UI flow has three follow-up pages, so this guard fails fast
     // when model output drifts from the expected 3-question contract.
     if (questions.length !== 3 || questions.some((q) => typeof q !== "string" || !q.trim())) {
       throw new Error("Follow-up questions were not returned in the expected format.");

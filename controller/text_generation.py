@@ -58,7 +58,7 @@ def generate_patterns_summary(
         logs = log_repository.get_logs(user_id)
 
     if not logs:
-        # REF(HCDD-110): pattern summaries require historical context; generating
+        # pattern summaries require historical context; generating
         # from zero logs produces confident-looking but misleading guidance.
         raise NoLogsAvailableError("At least one log is required to generate a pattern summary.")
 
@@ -66,38 +66,7 @@ def generate_patterns_summary(
 
     try:
         raw_text = generate_text(prompt)
-        # region agent log
-        print(f"[DEBUG patterns raw_text] {raw_text}")
-        try:
-            with open("/Users/jacoblee/Desktop/3.2/hcdd412/between-feelings/.cursor/debug-71f2c0.log", "a", encoding="utf-8") as _f:
-                _f.write(json.dumps({
-                    "sessionId": "71f2c0",
-                    "runId": "pre-fix",
-                    "hypothesisId": "H1-H5",
-                    "location": "controller/text_generation.py:62",
-                    "message": "generate_text succeeded with raw patterns payload",
-                    "data": {"raw_text": raw_text},
-                    "timestamp": __import__("time").time_ns() // 1_000_000,
-                }) + "\n")
-        except Exception:
-            pass
-        # endregion
     except Exception as exc:
-        # region agent log
-        try:
-            with open("/Users/jacoblee/Desktop/3.2/hcdd412/between-feelings/.cursor/debug-71f2c0.log", "a", encoding="utf-8") as _f:
-                _f.write(json.dumps({
-                    "sessionId": "71f2c0",
-                    "runId": "post-fix",
-                    "hypothesisId": "H7",
-                    "location": "controller/text_generation.py:80",
-                    "message": "generate_text raised exception",
-                    "data": {"error_type": type(exc).__name__, "error": str(exc)},
-                    "timestamp": __import__("time").time_ns() // 1_000_000,
-                }) + "\n")
-        except Exception:
-            pass
-        # endregion
         raise LLMResponseError(f"Pattern summary generation failed: {str(exc)}") from exc
     return _parse_and_validate_patterns_json(raw_text)
 
@@ -136,7 +105,7 @@ def _parse_and_validate_followup_questions(raw_text: str) -> List[str]:
         raise InvalidFollowupQuestionsError("Follow-up questions response must be a list.")
 
     if len(parsed) != 3:
-        # REF(HCDD-111): new-log UI currently renders exactly three follow-up slots.
+        # new-log UI currently renders exactly three follow-up slots.
         # Enforcing this here avoids UI/backend drift.
         raise InvalidFollowupQuestionsError("Follow-up questions response must contain exactly 3 items.")
 
@@ -166,21 +135,6 @@ def _parse_and_validate_patterns_json(raw_text: str) -> Dict[str, Any]:
         if candidate.endswith("```"):
             candidate = candidate[:-3]
         candidate = candidate.strip()
-        # region agent log
-        try:
-            with open("/Users/jacoblee/Desktop/3.2/hcdd412/between-feelings/.cursor/debug-71f2c0.log", "a", encoding="utf-8") as _f:
-                _f.write(json.dumps({
-                    "sessionId": "71f2c0",
-                    "runId": "post-fix",
-                    "hypothesisId": "H3",
-                    "location": "controller/text_generation.py:89",
-                    "message": "stripped markdown fences from patterns response",
-                    "data": {"had_fence": True, "starts_with_brace": candidate.startswith("{")},
-                    "timestamp": __import__("time").time_ns() // 1_000_000,
-                }) + "\n")
-        except Exception:
-            pass
-        # endregion
 
     try:
         data = json.loads(candidate)
@@ -190,7 +144,7 @@ def _parse_and_validate_patterns_json(raw_text: str) -> Dict[str, Any]:
     if not isinstance(data, dict):
         raise InvalidLLMJsonError("Patterns response must be a JSON object at the top level.")
 
-    # REF(HCDD-112): the frontend patterns page depends on this exact schema.
+    # the frontend patterns page depends on this exact schema.
     required_fields = {
         "hero_summary": str,
         "short_summary": str,
