@@ -3,6 +3,8 @@
   --bg:           #f5eee6;
   --card:         #ecddce;
   --surface:      #f5eee6;
+  --outer-bg:     #ddd3c7;
+  --white:        #ffffff;
 
   /* Borders */
   --border:       #d4b8c6;
@@ -16,6 +18,11 @@
   --accent:       #6d0951;
   --accent-soft:  #f0d6e5;
   --accent-light: #f0d6e5;
+  --accent-hover: #5c0844;
+  --danger:       #c44;
+  --danger-text:  #a82828;
+  --overlay:      rgba(59, 33, 48, 0.25);
+  --overlay-dark: rgba(0, 0, 0, 0.32);
 
   /* Header / chrome */
   --header-bg:    #6d0951;
@@ -48,7 +55,7 @@
 
 body {
   font-family: var(--font-body);
-  background: #ddd3c7;
+  background: var(--outer-bg);
   color: var(--text-primary);
   min-height: 100dvh;
   display: flex;
@@ -172,7 +179,7 @@ body {
   display: none;
   position: absolute;
   inset: 0;
-  background: rgba(59, 33, 48, 0.25);
+  background: var(--overlay);
   z-index: 200;
 }
 
@@ -278,7 +285,7 @@ body {
 .chip.active {
   background: var(--accent);
   border-color: var(--accent);
-  color: #fff;
+  color: var(--white);
 }
 
 .log-list {
@@ -387,8 +394,8 @@ body {
   transition: border-color 0.2s, color 0.2s, background 0.2s;
 }
 .card-menu-delete-btn:hover {
-  border-color: #c44;
-  color: #a82828;
+  border-color: var(--danger);
+  color: var(--danger-text);
   background: rgba(168, 40, 40, 0.08);
 }
 
@@ -435,11 +442,11 @@ body {
 .btn-filled {
   background: var(--accent);
   border: 1.5px solid var(--accent);
-  color: #fff;
+  color: var(--white);
 }
 .btn-filled:hover {
-  background: #5c0844;
-  border-color: #5c0844;
+  background: var(--accent-hover);
+  border-color: var(--accent-hover);
 }
 
 /* Logo in logs.html header (right side, replaces spacer) */
@@ -514,7 +521,7 @@ body {
   border-radius: 14px;
   background: var(--accent);
   border: 1.5px solid var(--accent);
-  color: #fff;
+  color: var(--white);
   cursor: pointer;
   font-family: var(--font-body);
   font-weight: 600;
@@ -522,8 +529,8 @@ body {
   transition: background 0.2s, border-color 0.2s;
 }
 .login-submit:hover {
-  background: #5c0844;
-  border-color: #5c0844;
+  background: var(--accent-hover);
+  border-color: var(--accent-hover);
 }
 
 .toggle-password {
@@ -557,6 +564,13 @@ body {
   border: 1px solid var(--border);
   border-radius: var(--radius);
   padding: 16px;
+}
+
+.btn-filled,
+.login-submit,
+.dropdown-btn,
+.log-form-page .main-btn {
+  color: var(--white);
 }
 
 .section-label {
@@ -646,7 +660,7 @@ body {
 .dropdown-btn {
   width: 100%;
   background: var(--header-bg);
-  color: #fff;
+  color: var(--white);
   border: none;
   padding: 11px 16px;
   border-radius: 12px;
@@ -659,7 +673,7 @@ body {
   text-align: left;
 }
 .dropdown-btn:hover {
-  background: #5c0844;
+  background: var(--accent-hover);
 }
 
 .dropdown-content {
@@ -811,11 +825,11 @@ body {
 
 .log-form-page .main-btn {
   background: var(--header-bg);
-  color: #fff;
+  color: var(--white);
 }
 
 .log-form-page .main-btn:hover {
-  background: #5c0844;
+  background: var(--accent-hover);
 }
 
 .log-form-page .main-btn.small {
@@ -886,7 +900,7 @@ body {
 .view-overlay-backdrop {
   position: absolute;
   inset: 0;
-  background: rgba(0, 0, 0, 0.32);
+  background: var(--overlay-dark);
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.2s ease;
@@ -956,7 +970,7 @@ body {
 
 @media (min-width: 480px) {
   body {
-    background: #ddd3c7;
+    background: var(--outer-bg);
     justify-content: center;
     align-items: center;
     padding: 24px 0;
@@ -970,13 +984,15 @@ body {
   }
 }
 #outputBox {
-  height: 300px;  
+  min-height: 300px;
+  max-height: 45dvh;
   overflow-y: auto;
   display: flex;
   align-items: flex-start;
   justify-content: flex-start;
   padding: 12px;
 }
+
 
 #outputText {
   margin: 0;
@@ -988,9 +1004,10 @@ body {
 
 #userInput {
   min-height: 75px;
-  height: 75px;
-  resize: none;
+  max-height: 24dvh;
+  resize: vertical;
 }
+
 
 #userInput::placeholder {
   color: var(--text-muted);
