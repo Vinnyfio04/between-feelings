@@ -106,6 +106,20 @@
       </main>
     </section>
 
+    <!-- delete confirmation overlay -->
+    <div class="delete-confirm-backdrop" id="deleteConfirmBackdrop" aria-hidden="true"></div>
+    <section class="delete-confirm-overlay" id="deleteConfirmOverlay" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="deleteConfirmTitle">
+      <div class="delete-confirm-card">
+        <p class="section-label">DELETE ENTRY</p>
+        <h2 id="deleteConfirmTitle">Delete this log?</h2>
+        <p class="delete-confirm-text">This action cannot be undone.</p>
+        <div class="delete-confirm-actions">
+          <button type="button" class="sub-btn" id="cancelDeleteBtn">Cancel</button>
+          <button type="button" class="main-btn delete-confirm-btn" id="confirmDeleteBtn">Delete</button>
+        </div>
+      </div>
+    </section>
+
     <footer class="bottom-bar" style="display:none;"></footer>
 
   </div>
@@ -124,6 +138,10 @@
     const viewOverlay = document.getElementById("viewOverlay");
     const viewOverlayBackdrop = document.getElementById("viewOverlayBackdrop");
     const closeViewOverlayBtn = document.getElementById("closeViewOverlayBtn");
+    const deleteConfirmOverlay = document.getElementById("deleteConfirmOverlay");
+    const deleteConfirmBackdrop = document.getElementById("deleteConfirmBackdrop");
+    const cancelDeleteBtn = document.getElementById("cancelDeleteBtn");
+    const confirmDeleteBtn = document.getElementById("confirmDeleteBtn");
     const viewLogId = document.getElementById("viewLogId");
     const viewLogDate = document.getElementById("viewLogDate");
     const viewLabel = document.getElementById("viewLabel");
@@ -136,6 +154,7 @@
 
     let currentFilter = "all";
     let sortDescending = true;
+    let pendingDelete = null;
 
     const apiBaseUrl = "http://127.0.0.1:5000"; // Base URL for the API (local for now)
     const currentUserId = sessionStorage.getItem("currentUserId") // Get the user id from the session storage
@@ -321,6 +340,36 @@
       viewOverlayBackdrop.setAttribute("aria-hidden", "true");
     }
 
+    function openDeleteConfirmation(logId, card) {
+      closeAllCardMenus();
+      pendingDelete = { logId, card };
+      deleteConfirmOverlay.classList.add("open");
+      deleteConfirmBackdrop.classList.add("visible");
+      deleteConfirmOverlay.setAttribute("aria-hidden", "false");
+      deleteConfirmBackdrop.setAttribute("aria-hidden", "false");
+      cancelDeleteBtn.focus();
+    }
+
+    function closeDeleteConfirmation() {
+      deleteConfirmOverlay.classList.remove("open");
+      deleteConfirmBackdrop.classList.remove("visible");
+      deleteConfirmOverlay.setAttribute("aria-hidden", "true");
+      deleteConfirmBackdrop.setAttribute("aria-hidden", "true");
+      pendingDelete = null;
+    }
+
+    async function handleDeleteConfirmation() {
+      if (!pendingDelete?.logId) return;
+      const { logId, card } = pendingDelete;
+      confirmDeleteBtn.disabled = true;
+      try {
+        await deleteLogCard(logId, card);
+      } finally {
+        confirmDeleteBtn.disabled = false;
+        closeDeleteConfirmation();
+      }
+    }
+
     menuBtn.addEventListener("click", () => {
       drawer.classList.add("open");
       drawerBackdrop.classList.add("visible");
@@ -337,8 +386,20 @@
       closeViewOverlay();
     });
 
+    deleteConfirmBackdrop.addEventListener("click", () => {
+      closeDeleteConfirmation();
+    });
+
     closeViewOverlayBtn.addEventListener("click", () => {
       closeViewOverlay();
+    });
+
+    cancelDeleteBtn.addEventListener("click", () => {
+      closeDeleteConfirmation();
+    });
+
+    confirmDeleteBtn.addEventListener("click", () => {
+      handleDeleteConfirmation();
     });
 
     filterBtn.addEventListener("click", () => {
@@ -390,7 +451,7 @@
         e.stopPropagation(); // Stop the event from bubbling up to the parent elements
         const logId = deleteBtn.dataset.logId;
         const card = deleteBtn.closest(".log-card");
-        deleteLogCard(logId, card);
+        openDeleteConfirmation(logId, card);
       }
     });
 
@@ -401,6 +462,10 @@
     document.addEventListener("keydown", (e) => {
       if (e.key === "Escape" && viewOverlay.classList.contains("open")) {
         closeViewOverlay();
+        return;
+      }
+      if (e.key === "Escape" && deleteConfirmOverlay.classList.contains("open")) {
+        closeDeleteConfirmation();
       }
     });
 
