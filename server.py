@@ -1,6 +1,5 @@
 from pathlib import Path
-import json
-import time
+import logging
 import sys
 import threading
 
@@ -19,7 +18,7 @@ from text_generation import (  # noqa: E402
     InvalidFollowupQuestionsError,
 )
 
-
+logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
 CORS(app) # Enable CORS for the app, prevent browser from blocking requests from different origins
@@ -171,22 +170,7 @@ def get_patterns_summary(user_id: int):
         # Preserve existing fallback for unknown cache states.
         return jsonify(result)
     except Exception as exc:
-        # region agent log
-        print(f"[DEBUG Exception] {exc}")
-        try:
-            with open("/Users/jacoblee/Desktop/3.2/hcdd412/between-feelings/.cursor/debug-71f2c0.log", "a", encoding="utf-8") as _f:
-                _f.write(json.dumps({
-                    "sessionId": "71f2c0",
-                    "runId": "post-fix",
-                    "hypothesisId": "H6",
-                    "location": "server.py:get_patterns_summary",
-                    "message": "patterns route internal_error",
-                    "data": {"user_id": user_id, "error": str(exc)},
-                    "timestamp": int(time.time() * 1000),
-                }) + "\n")
-        except Exception:
-            pass
-        # endregion
+        logger.exception("Unhandled error in get_patterns_summary")
         return jsonify({
             "error": "internal_error",
             "message": f"Unexpected internal error: {str(exc)}",

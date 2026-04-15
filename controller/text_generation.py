@@ -66,38 +66,7 @@ def generate_patterns_summary(
 
     try:
         raw_text = generate_text(prompt)
-        # region agent log
-        print(f"[DEBUG patterns raw_text] {raw_text}")
-        try:
-            with open("/Users/jacoblee/Desktop/3.2/hcdd412/between-feelings/.cursor/debug-71f2c0.log", "a", encoding="utf-8") as _f:
-                _f.write(json.dumps({
-                    "sessionId": "71f2c0",
-                    "runId": "pre-fix",
-                    "hypothesisId": "H1-H5",
-                    "location": "controller/text_generation.py:62",
-                    "message": "generate_text succeeded with raw patterns payload",
-                    "data": {"raw_text": raw_text},
-                    "timestamp": __import__("time").time_ns() // 1_000_000,
-                }) + "\n")
-        except Exception:
-            pass
-        # endregion
     except Exception as exc:
-        # region agent log
-        try:
-            with open("/Users/jacoblee/Desktop/3.2/hcdd412/between-feelings/.cursor/debug-71f2c0.log", "a", encoding="utf-8") as _f:
-                _f.write(json.dumps({
-                    "sessionId": "71f2c0",
-                    "runId": "post-fix",
-                    "hypothesisId": "H7",
-                    "location": "controller/text_generation.py:80",
-                    "message": "generate_text raised exception",
-                    "data": {"error_type": type(exc).__name__, "error": str(exc)},
-                    "timestamp": __import__("time").time_ns() // 1_000_000,
-                }) + "\n")
-        except Exception:
-            pass
-        # endregion
         raise LLMResponseError(f"Pattern summary generation failed: {str(exc)}") from exc
     return _parse_and_validate_patterns_json(raw_text)
 
@@ -166,21 +135,6 @@ def _parse_and_validate_patterns_json(raw_text: str) -> Dict[str, Any]:
         if candidate.endswith("```"):
             candidate = candidate[:-3]
         candidate = candidate.strip()
-        # region agent log
-        try:
-            with open("/Users/jacoblee/Desktop/3.2/hcdd412/between-feelings/.cursor/debug-71f2c0.log", "a", encoding="utf-8") as _f:
-                _f.write(json.dumps({
-                    "sessionId": "71f2c0",
-                    "runId": "post-fix",
-                    "hypothesisId": "H3",
-                    "location": "controller/text_generation.py:89",
-                    "message": "stripped markdown fences from patterns response",
-                    "data": {"had_fence": True, "starts_with_brace": candidate.startswith("{")},
-                    "timestamp": __import__("time").time_ns() // 1_000_000,
-                }) + "\n")
-        except Exception:
-            pass
-        # endregion
 
     try:
         data = json.loads(candidate)
