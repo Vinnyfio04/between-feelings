@@ -72,5 +72,5 @@ def build_followup_questions_prompt(log: EmotionLog) -> str:
     return _build_prompt(
         system_prompt=SYSTEM_PROMPT,
         task_prompt=CLARIFYING_QUESTIONS_PROMPT,
-        logs_text=log.to_prompt_row(),
+        logs_text=log.to_followup_prompt_block(),
     )

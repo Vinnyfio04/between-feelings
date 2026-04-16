@@ -206,5 +206,33 @@ class TestPatternSummaryJsonParsing(unittest.TestCase):
             text_generation.generate_patterns_summary(logs=[log])
 
 
+class TestFollowupPromptFormatting(unittest.TestCase):
+    def test_build_followup_questions_prompt_uses_labeled_single_log_block(self):
+        log = emotion_log.EmotionLog(
+            user_id=99,
+            log_id=42,
+            label="Stressed",
+            description="I felt overwhelmed before class.",
+            date="2026-04-16",
+            trigger="upcoming presentation",
+            intensity=4,
+            sleep_quality="Average",
+            follow_up_qa="Q1: earlier note\nA1: response",
+        )
+
+        prompt = prompt_generation.build_followup_questions_prompt(log)
+
+        self.assertIn("Label: Stressed", prompt)
+        self.assertIn("Description: I felt overwhelmed before class.", prompt)
+        self.assertIn("Date: 2026-04-16", prompt)
+        self.assertIn("Trigger: upcoming presentation", prompt)
+        self.assertIn("Intensity: 4", prompt)
+        self.assertIn("Sleep Quality: Average", prompt)
+        self.assertNotIn("42 | 99 |", prompt)
+        self.assertNotIn("follow_up_qa", prompt)
+        self.assertNotIn("Q1: earlier note", prompt)
+        self.assertNotIn("A1: response", prompt)
+
+
 if __name__ == "__main__":
     unittest.main()

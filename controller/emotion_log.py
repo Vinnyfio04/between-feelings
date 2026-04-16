@@ -48,5 +48,16 @@ class EmotionLog:
         """Serialize this log into the standardized prompt row format."""
         return f"{self.log_id} | {self.user_id} | {self.label} | {self.description} | {self.date} | {self.trigger} | {self.intensity} | {self.sleep_quality} | {self.follow_up_qa} ||"
 
+    def to_followup_prompt_block(self) -> str:
+        """Serialize this log into a labeled block for follow-up question prompts."""
+        return (
+            f"Label: {self.label}\n"
+            f"Description: {self.description}\n"
+            f"Date: {self.date}\n"
+            f"Trigger: {self.trigger}\n"
+            f"Intensity: {self.intensity}\n"
+            f"Sleep Quality: {self.sleep_quality}"
+        )
+
     def __str__(self):
         return self.to_prompt_row()
