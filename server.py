@@ -320,4 +320,4 @@ def chat(user_id: int):
         }), 500
 
 if __name__ == "__main__":
-    app.run(debug=True) # Run the app in debug mode, allow for automatic reloading of the server when code changes are made
+    app.run() # Run the app in debug mode, allow for automatic reloading of the server when code changes are made
