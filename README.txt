@@ -5,15 +5,13 @@ AI-powered emotion tracking app that identifies recurring behavioral patterns fr
 The purpose of Between Feelings is to help people recognize and regulate their emotions. The primary target users are university students under academic pressure and working professionals facing life stress. The operating model involves users logging into the system with their account and password to ensure user data privacy. Users then input their emotional experiences into the LLM system. The LLM analyzes and guides users to elicit deeper reflections, subsequently generating patterns and saving the data in a database for users to modify and access at any time.
 
 ## Implemented Features
-- User authentication for secure login and access control
-- Retrieval of structured emotional log data from the database
-- Search functionality by keyword or emotional intensity
-
-## Planned Features
-- Log emotional experiences in a simple, structured format
-- Receive AI-generated follow-up questions to clarify entries
-- View pattern-based summaries of emotional triggers over time
-- Chat with your data to explore trends and insights
+- User authentication (sign up, user existence check, login)
+- Create emotional logs
+- AI-generated follow-up questions before final log submission
+- View/search/filter logs
+- Edit and delete logs
+- AI-generated pattern summaries
+- Chat with log data
 
 ## Installation
 1. Download the code
@@ -28,12 +26,37 @@ The purpose of Between Feelings is to help people recognize and regulate their e
    - Start the server from the project root:
      python server.py
 
-5. Run the frontend (static HTML)
+4. Run the frontend (static HTML)
    - Open the following HTML pages in `view/` in your browser
    - For example:
      - `view/authentication.html` (login -> calls `/authentication/verify_password/...`)
      - `view/logs.html` (renders logs by calling `/logs/<user_id>` and deletes via `DELETE /logs/<user_id>/<log_id>`)
           - NOTE: Test logs can be used to verify deletion. You can search "test" in the search bar to retrieve them.
+
+## Required Environment Variables
+The application uses the following environment variables:
+- DATABASE_URL
+- GOOGLE_GENERATIVE_AI_API_KEY
+
+These values are already configured in the submitted project environment.
+
+## Access & External Resources
+
+- The required API keys and database connection string are already included in the submitted project files.
+- No additional configuration is required to run the application as submitted.
+
+### Test User Credentials
+- User 1  
+  Username: Sarah  
+  Password: Sarah  
+
+- User 2  
+  Username: Victor  
+  Password: Victor  
+
+### External Services Used
+- Gemini API (Google Generative AI) for LLM-based text generation  
+- Neon PostgreSQL database for persistent storage
 
 ## Tech Stack
 - Neon (PostgreSQL hosted)
@@ -47,12 +70,16 @@ The purpose of Between Feelings is to help people recognize and regulate their e
 
 ## Project Structure
 root/
+├── README.txt
+├── requirements.txt
 ├── server.py
 ├── controller/
 │   ├── authentication.py
 │   ├── controller.py
+│   ├── database_connection.py
 │   ├── db_logging.py
 │   ├── emotion_log.py
+│   ├── prompt_generation.py
 │   └── text_generation.py
 ├── model/
 │   ├── llm_client.py
@@ -61,38 +88,28 @@ root/
 ├── view/
 │   ├── authentication.html
 │   ├── chat.html
-│   ├── home.html
 │   ├── edit_log.html
 │   ├── logs.html
-│   ├── script.js
-│   └── log_style.css
-│
-├── testharness.py
-└── tester.py
+│   ├── logo.svg
+│   ├── new_log.html
+│   ├── patterns.html
+│   ├── sign_up.html
+│   └── style.css
+└── test/
+    ├── test_authentication.py
+    ├── test_db_logging.py
+    └── test_server.py
 
-## Commenting Guidelines
-Use comments to explain intent and constraints, not to narrate obvious syntax.
+## Architecture / MVC Flow
+`view/*.html` -> `server.py` routes -> `controller/*` -> model/db helpers + Gemini API + Neon PostgreSQL
 
-### What to comment
-- Explain non-obvious logic, especially validation branches, fallbacks, polling, retries, and error mapping.
-- Document why a decision was made when a simpler-looking option exists.
-- Capture business context for limits and rules (for example, hard caps, required fields, and compatibility constraints).
-- Add technical debt notes when a shortcut is intentional and temporary.
+## Smoke Test Checklist
 
-### What not to comment
-- Do not add comments that just restate the next line of code.
-- Do not keep commented-out old implementations as history notes.
-- Do not over-comment basic HTML structure or trivial assignments.
-
-### Traceability format
-- For requirement or bug traceability, include a short reference token in comments:
-  - `product/instructor requirement context`
-  - `BUG(HCDD-456): bug context and why this guard exists`
-- For debt items, use:
-  - `TODO(HCDD-789): short reason + intended follow-up`
-
-### Per-file review checklist
-- Each new comment answers at least one: intent, constraint, decision rationale, or traceability.
-- Comments are placed near the exact branch/logic they justify.
-- No duplicate comments that say the same thing in multiple places.
-- Naming stays meaningful; comments should not compensate for unclear names when an easy rename is possible in a future pass.
+1. Start the backend (`python server.py`)
+2. Open `view/authentication.html`
+3. Log in using provided test credentials
+4. Create and submit a new emotional log
+5. View and search logs on `view/logs.html`
+6. Edit or delete an existing log
+7. View pattern summaries on `view/patterns.html`
+8. Use chat functionality on `view/chat.html`
