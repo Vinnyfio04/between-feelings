@@ -74,6 +74,25 @@ def test_save_log_success(mocker):
     mock_conn.commit.assert_called_once()
     mock_conn.rollback.assert_not_called()
 
+def test_save_log_success_with_very_long_description(mocker):
+    mock_conn = mocker.Mock()
+    mock_cur = mocker.Mock()
+
+    mock_conn.cursor.return_value = mock_cur
+    mock_cur.execute.return_value = None
+    mock_cur.fetchone.return_value = (124,)
+
+    mocker.patch("db_logging.get_connection", return_value=mock_conn)
+
+    long_description = "test " * 1000
+    log = EmotionLog(1, 1, "Happy", long_description, "2025", "trigger", 5, "good", "qa")
+
+    result = save_log(log)
+
+    assert result == 124
+    mock_conn.commit.assert_called_once()
+    mock_conn.rollback.assert_not_called()
+
 def test_save_log_failure_rolls_back(mocker):
     mock_conn = mocker.Mock()
     mock_cur = mocker.Mock()
