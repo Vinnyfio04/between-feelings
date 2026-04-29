@@ -1113,3 +1113,65 @@ body {
   color: var(--text-muted);
   opacity: 1;
 }
+
+
+/* Error toast popup. Container is absolute so it stays anchored inside
+   the .app-shell mobile column (which is position: relative) instead of
+   floating to the viewport center on desktop. */
+.error-toast-container {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  right: 16px;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  pointer-events: none;
+}
+
+.error-toast {
+  pointer-events: auto;
+  position: relative;
+  background: var(--white);
+  border: 1px solid var(--danger);
+  border-left: 4px solid var(--danger);
+  color: var(--text);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow);
+  padding: 10px 32px 10px 14px;
+  font-family: var(--font-body);
+}
+
+.error-toast-code {
+  font-weight: 600;
+  font-size: 0.85rem;
+  color: var(--danger-text);
+  margin-bottom: 2px;
+}
+
+.error-toast-message {
+  font-size: 0.875rem;
+  line-height: 1.4;
+  color: var(--text);
+  word-wrap: break-word;
+}
+
+.error-toast-close {
+  position: absolute;
+  top: 6px;
+  right: 8px;
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-size: 1.1rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.error-toast-close:hover {
+  color: var(--text);
+  background: var(--accent-soft);
+}

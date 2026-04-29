@@ -7,6 +7,7 @@
   <link rel="icon" href="logo.svg" type="image/svg+xml" />
   <link rel="stylesheet" href="style.css"/>
   <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <script src="error_toast.js"></script>
 </head>
 <body>
 
@@ -93,7 +94,7 @@ if (!currentUserId) {
     const text = input.value.trim();
 
     if (!text) {
-      outputText.textContent = "Please enter a message first.";
+      showErrorToast("VALIDATION", "Please enter a message first.");
       return;
     }
 
@@ -121,6 +122,7 @@ if (!currentUserId) {
           ? data.message
           : "Unable to generate a response right now.";
         outputText.textContent = message;
+        showErrorToast(response.status, message);
         return;
       }
 
@@ -129,6 +131,7 @@ if (!currentUserId) {
         : "No response was returned.";
     } catch (error) {
       outputText.textContent = "Unable to reach the server. Please try again.";
+      showErrorToast("NETWORK", "Unable to reach the server. Please try again.");
     }
   };
 }

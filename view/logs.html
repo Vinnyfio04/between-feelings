@@ -7,6 +7,7 @@
   <link rel="icon" href="logo.svg" type="image/svg+xml" />
   <link rel="stylesheet" href="style.css" />
   <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <script src="error_toast.js"></script>
 </head>
 <body>
 
@@ -238,9 +239,13 @@
           method: "DELETE",
         });
         if (!response.ok) {
+          showErrorToast(response.status, "Could not delete log.");
           throw new Error("Could not delete log.");
         }
       } catch (error) {
+        if (!(error instanceof Error) || error.message !== "Could not delete log.") {
+          showErrorToast("NETWORK", "Unable to reach the server to delete log.");
+        }
         await loadLogs();
       }
     }
@@ -249,7 +254,11 @@
       try {
         const response = await fetch(`${apiBaseUrl}/logs/${currentUserId}`); // Fetch the logs from the API
         if (!response.ok) { // throw an error if the response is not ok (null)
-          throw new Error("Could not load logs.");
+          const status = response.status;
+          showErrorToast(status, "Could not load logs.");
+          const err = new Error("Could not load logs.");
+          err.status = status;
+          throw err;
         }
 
         const logs = await response.json(); // Parse the response as JSON
@@ -262,6 +271,9 @@
         applyFilters();
       } catch (error) {
         logList.innerHTML = `<p class="card-description">Unable to load logs right now.</p>`; // If an error occurs, display a message in the log list
+        if (!error || !error.status) {
+          showErrorToast("NETWORK", "Unable to load logs right now.");
+        }
       }
     }
 
@@ -474,7 +486,11 @@
       try {
         const response = await fetch(`${apiBaseUrl}/logs/${currentUserId}/${encodeURIComponent(id)}`);
         if (!response.ok) {
-          throw new Error("Could not load selected log.");
+          const status = response.status;
+          showErrorToast(status, "Could not load selected log.");
+          const err = new Error("Could not load selected log.");
+          err.status = status;
+          throw err;
         }
         const log = await response.json();
 
@@ -487,7 +503,9 @@
         setViewField(viewSleepQuality, log.sleep_quality);
         openViewOverlay();
       } catch (error) {
-        alert("Unable to load this entry right now.");
+        if (!error || !error.status) {
+          showErrorToast("NETWORK", "Unable to load this entry right now.");
+        }
       }
     }
 

@@ -7,6 +7,7 @@
   <link rel="icon" href="logo.svg" type="image/svg+xml" />
   <link rel="stylesheet" href="style.css" />
   <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <script src="error_toast.js"></script>
 </head>
 <body>
  
@@ -149,7 +150,13 @@
       // instead of a generic "create user failed" error.
       try {
         const response = await fetch(`${apiBaseUrl}/authentication/user_exists/${username}`);
-        if (!response.ok) throw new Error("Could not check if username is already taken.");
+        if (!response.ok) {
+          const status = response.status;
+          showErrorToast(status, "Could not check if username is already taken.");
+          const e = new Error("Could not check if username is already taken.");
+          e.status = status;
+          throw e;
+        }
         const data = await response.json();
         if (data.exists) {
           usernameTakenMsg.hidden = false;
@@ -157,14 +164,22 @@
         }
         usernameTakenMsg.hidden = true;
       } catch (err) {
-        alert("Unable to reach the server. Please try again.");
+        if (!err || !err.status) {
+          showErrorToast("NETWORK", "Unable to reach the server. Please try again.");
+        }
       }
 
       try {
         // TODO(HCDD-303): credentials are in URL params for legacy endpoint shape.
         // Replace with JSON POST body when auth routes are revised.
         const response = await fetch(`${apiBaseUrl}/authentication/create_user/${username}/${password}`, {method: "POST"}); // Sends POST request to create_user endpoint
-        if (!response.ok) throw new Error("Could not create a new user.");
+        if (!response.ok) {
+          const status = response.status;
+          showErrorToast(status, "Could not create a new user.");
+          const e = new Error("Could not create a new user.");
+          e.status = status;
+          throw e;
+        }
         const data = await response.json();
         if (data.verified) {
           // Client-side session state is only used for page routing; server-side checks
@@ -172,10 +187,12 @@
           sessionStorage.setItem("currentUserId", data.user_id) // Set the user id in the session storage
           window.location.href = "logs.html";
         } else {
-          alert("Invalid username or password.");
+          showErrorToast("AUTH", "Invalid username or password.");
         }
       } catch (err) {
-        alert("Unable to reach the server. Please try again.");
+        if (!err || !err.status) {
+          showErrorToast("NETWORK", "Unable to reach the server. Please try again.");
+        }
       }
 
     }

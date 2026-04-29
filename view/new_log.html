@@ -7,6 +7,7 @@
   <link rel="icon" href="logo.svg" type="image/svg+xml" />
   <link rel="stylesheet" href="style.css"/>
   <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <script src="error_toast.js"></script>
 </head>
 <body>
 
@@ -215,7 +216,7 @@ async function handleInitialNext() {
   const label = labelInput.value.trim();
   const trigger = triggerInput.value.trim();
   if (!description || !label || !trigger) {
-    alert("Please complete description, feeling label, and trigger before continuing.");
+    showErrorToast("VALIDATION", "Please complete description, feeling label, and trigger before continuing.");
     return;
   }
 
@@ -234,7 +235,12 @@ async function handleInitialNext() {
       body: JSON.stringify(initialPayload)
     });
     if (!response.ok) {
-      throw new Error("Could not generate follow-up questions.");
+      let errData = null;
+      try { errData = await response.json(); } catch (_) { errData = null; }
+      const err = new Error("Could not generate follow-up questions.");
+      err.status = response.status;
+      err.serverMessage = (errData && errData.message) || null;
+      throw err;
     }
     const data = await response.json();
     const questions = Array.isArray(data.questions) ? data.questions : [];
@@ -254,7 +260,11 @@ async function handleInitialNext() {
     page2.classList.add("active");
   } catch (error) {
     console.error(error);
-    alert("Unable to generate follow-up questions right now. Please try again.");
+    if (error && error.status) {
+      showErrorToast(error.status, error.serverMessage || "Unable to generate follow-up questions right now. Please try again.");
+    } else {
+      showErrorToast("NETWORK", "Unable to generate follow-up questions right now. Please try again.");
+    }
   } finally {
     isGeneratingFollowups = false;
     setPage1Loading(false);
@@ -263,7 +273,7 @@ async function handleInitialNext() {
 
 async function submitFinalLog() {
   if (!state.initialLogPayload) {
-    alert("Missing initial log details. Please start again from page 1.");
+    showErrorToast("VALIDATION", "Missing initial log details. Please start again from page 1.");
     page2.classList.remove("active");
     page1.classList.add("active");
     return;
@@ -285,13 +295,22 @@ async function submitFinalLog() {
       body: JSON.stringify(payload)
     });
     if (!response.ok) {
-      throw new Error("Could not save log.");
+      let errData = null;
+      try { errData = await response.json(); } catch (_) { errData = null; }
+      const err = new Error("Could not save log.");
+      err.status = response.status;
+      err.serverMessage = (errData && errData.message) || null;
+      throw err;
     }
     alert("Log saved successfully.");
     window.location.href = "logs.html";
   } catch (error) {
     console.error(error);
-    alert("Unable to save this log right now. Please try again.");
+    if (error && error.status) {
+      showErrorToast(error.status, error.serverMessage || "Unable to save this log right now. Please try again.");
+    } else {
+      showErrorToast("NETWORK", "Unable to save this log right now. Please try again.");
+    }
   } finally {
     isSubmittingFinalLog = false;
     setPage2Loading(false);

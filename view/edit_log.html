@@ -7,6 +7,7 @@
   <link rel="icon" href="logo.svg" type="image/svg+xml" />
   <link rel="stylesheet" href="style.css"/>
   <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <script src="error_toast.js"></script>
 </head>
 <body>
 
@@ -147,13 +148,19 @@ async function loadLog() {
     return;
   }
   if (!logId) {
-    alert("No log selected.");
+    showErrorToast("VALIDATION", "No log selected.");
     window.location.href = "logs.html";
     return;
   }
   try {
     const response = await fetch(`${apiBaseUrl}/logs/${currentUserId}/${encodeURIComponent(logId)}`);
-    if (!response.ok) throw new Error("Could not load this log.");
+    if (!response.ok) {
+      const status = response.status;
+      showErrorToast(status, "Could not load this log.");
+      const err = new Error("Could not load this log.");
+      err.status = status;
+      throw err;
+    }
     const log = await response.json();
 
     logIdPill.textContent = `Log ID: #${log.log_id}`;
@@ -164,7 +171,9 @@ async function loadLog() {
     intensityInput.value = Number(log.intensity || 1);
     sleepInput.value = mapSleepLabelToValue(log.sleep_quality);
   } catch (error) {
-    alert("Unable to load this entry.");
+    if (!error || !error.status) {
+      showErrorToast("NETWORK", "Unable to load this entry.");
+    }
     window.location.href = "logs.html";
   }
 }
@@ -187,10 +196,18 @@ async function saveChanges() {
       },
       body: JSON.stringify(payload)
     });
-    if (!response.ok) throw new Error("Could not save changes.");
+    if (!response.ok) {
+      const status = response.status;
+      showErrorToast(status, "Unable to save changes right now.");
+      const err = new Error("Could not save changes.");
+      err.status = status;
+      throw err;
+    }
     window.location.href = "logs.html";
   } catch (error) {
-    alert("Unable to save changes right now.");
+    if (!error || !error.status) {
+      showErrorToast("NETWORK", "Unable to save changes right now.");
+    }
   } finally {
     saveBtn.disabled = false;
   }

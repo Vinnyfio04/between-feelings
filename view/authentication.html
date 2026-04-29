@@ -7,6 +7,7 @@
   <link rel="icon" href="logo.svg" type="image/svg+xml" />
   <link rel="stylesheet" href="style.css" />
   <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <script src="error_toast.js"></script>
 </head>
 <body>
  
@@ -115,7 +116,13 @@
         // TODO(HCDD-301): credentials are passed in the URL for current route compatibility.
         // Move login to a JSON POST body to avoid exposing secrets in request paths/logs.
         const response = await fetch(`${apiBaseUrl}/authentication/verify_password/${username}/${password}`);
-        if (!response.ok) throw new Error("Could not verify password.");
+        if (!response.ok) {
+          const status = response.status;
+          showErrorToast(status, "Could not verify password.");
+          const err = new Error("Could not verify password.");
+          err.status = status;
+          throw err;
+        }
         const data = await response.json();
         if (data.verified) {
           // this is a client UX gate only; backend endpoints must still
@@ -123,10 +130,12 @@
           sessionStorage.setItem("currentUserId", data.user_id) // Set the user id in the session storage
           window.location.href = "logs.html";
         } else {
-          alert("Invalid username or password.");
+          showErrorToast("AUTH", "Invalid username or password.");
         }
       } catch (err) {
-        alert("Unable to reach the server. Please try again.");
+        if (!err || !err.status) {
+          showErrorToast("NETWORK", "Unable to reach the server. Please try again.");
+        }
       }
 
     }

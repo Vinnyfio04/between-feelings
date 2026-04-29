@@ -7,6 +7,7 @@
   <link rel="icon" href="logo.svg" type="image/svg+xml" />
   <link rel="stylesheet" href="style.css"/>
   <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <script src="error_toast.js"></script>
 </head>
 <body>
 
@@ -128,6 +129,7 @@ if (!currentUserId) {
     patternSections.forEach((section) => section.classList.add("hidden"));
     patternsStatus.textContent = "Unable to load patterns right now.";
     setFallbackContent();
+    showErrorToast("NETWORK", "Unable to load patterns right now.");
   }
 
   function renderEmpty() {
@@ -190,8 +192,9 @@ if (!currentUserId) {
       if (response.status === 502) {
         patternsStatus.textContent = "Pattern generation failed. Please try again later.";
         console.error(data.message)
-        
+
         setFallbackContent();
+        showErrorToast(502, (data && data.message) || "Pattern generation failed.");
         return;
       }
 
