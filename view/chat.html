@@ -121,7 +121,7 @@ if (!currentUserId) {
         const message = data && data.message
           ? data.message
           : "Unable to generate a response right now.";
-        outputText.textContent = message;
+        outputText.textContent = "Failed to generate response";
         showErrorToast(response.status, message);
         return;
       }
@@ -130,7 +130,7 @@ if (!currentUserId) {
         ? data.reply
         : "No response was returned.";
     } catch (error) {
-      outputText.textContent = "Unable to reach the server. Please try again.";
+      outputText.textContent = "Failed to generate response";
       showErrorToast("NETWORK", "Unable to reach the server. Please try again.");
     }
   };
